@@ -1,9 +1,19 @@
+#include <stdbool.h>
 #include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include <string.h>
+
+/* ESP APIs */
 #include "esp_log.h"
+#include "nvs_flash.h"
+#include "sdkconfig.h"
+#include "esp_err.h"
 #include "driver/i2c.h"
 #include "driver/uart.h"
+
+/* FreeRTOS APIs */
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+
 #include "bme280.h"
 #include "ble.h"
 
