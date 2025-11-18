@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "dgSpecHash": "VwpSBrahJus=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\IoTClient.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\milos\\.nuget\\packages\\system.net.http.json\\10.0.0\\system.net.http.json.10.0.0.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1510",
+      "level": "Warning",
+      "message": "PackageReference System.Net.Http.Json will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.",
+      "projectPath": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\IoTClient.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\IoTClient.csproj",
+      "libraryId": "System.Net.Http.Json",
+      "targetGraphs": [
+        "net10.0-windows7.0"
+      ]
+    }
+  ]
+}

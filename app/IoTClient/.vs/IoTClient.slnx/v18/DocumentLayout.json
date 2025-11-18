@@ -1,0 +1,187 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|c:\\users\\milos\\documents\\studia\\inzynierka\\app\\iotclient\\iotclient\\loginform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|solutionrelative:iotclient\\loginform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|c:\\users\\milos\\documents\\studia\\inzynierka\\app\\iotclient\\iotclient\\mainform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|solutionrelative:iotclient\\mainform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|c:\\users\\milos\\documents\\studia\\inzynierka\\app\\iotclient\\iotclient\\mainform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|solutionrelative:iotclient\\mainform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|c:\\users\\milos\\documents\\studia\\inzynierka\\app\\iotclient\\iotclient\\session.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|solutionrelative:iotclient\\session.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|c:\\users\\milos\\documents\\studia\\inzynierka\\app\\iotclient\\iotclient\\loginform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|solutionrelative:iotclient\\loginform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|c:\\users\\milos\\documents\\studia\\inzynierka\\app\\iotclient\\iotclient\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|solutionrelative:iotclient\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|c:\\users\\milos\\documents\\studia\\inzynierka\\app\\iotclient\\iotclient\\sensorform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|solutionrelative:iotclient\\sensorform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|c:\\users\\milos\\documents\\studia\\inzynierka\\app\\iotclient\\iotclient\\sensorform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|solutionrelative:iotclient\\sensorform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|c:\\users\\milos\\documents\\studia\\inzynierka\\app\\iotclient\\iotclient\\measurment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|solutionrelative:iotclient\\measurment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|c:\\users\\milos\\documents\\studia\\inzynierka\\app\\iotclient\\iotclient\\sensor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{45A43417-D6D7-4FBE-B37D-B9BC3308E002}|IoTClient\\IoTClient.csproj|solutionrelative:iotclient\\sensor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "session.cs",
+              "DocumentMoniker": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\session.cs",
+              "RelativeDocumentMoniker": "IoTClient\\session.cs",
+              "ToolTip": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\session.cs",
+              "RelativeToolTip": "IoTClient\\session.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-18T22:29:26.666Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MainForm.cs",
+              "DocumentMoniker": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\MainForm.cs",
+              "RelativeDocumentMoniker": "IoTClient\\MainForm.cs",
+              "ToolTip": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\MainForm.cs",
+              "RelativeToolTip": "IoTClient\\MainForm.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAJQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-18T20:48:07.514Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "LoginForm.cs",
+              "DocumentMoniker": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\LoginForm.cs",
+              "RelativeDocumentMoniker": "IoTClient\\LoginForm.cs",
+              "ToolTip": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\LoginForm.cs",
+              "RelativeToolTip": "IoTClient\\LoginForm.cs",
+              "ViewState": "AgIAAEcAAAAAAAAAAAAwwFcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-18T20:47:16.614Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "SensorForm.cs",
+              "DocumentMoniker": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\SensorForm.cs",
+              "RelativeDocumentMoniker": "IoTClient\\SensorForm.cs",
+              "ToolTip": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\SensorForm.cs",
+              "RelativeToolTip": "IoTClient\\SensorForm.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-18T20:47:06.699Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Measurment.cs",
+              "DocumentMoniker": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\Measurment.cs",
+              "RelativeDocumentMoniker": "IoTClient\\Measurment.cs",
+              "ToolTip": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\Measurment.cs",
+              "RelativeToolTip": "IoTClient\\Measurment.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-18T20:46:45.144Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Sensor.cs",
+              "DocumentMoniker": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\Sensor.cs",
+              "RelativeDocumentMoniker": "IoTClient\\Sensor.cs",
+              "ToolTip": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\Sensor.cs",
+              "RelativeToolTip": "IoTClient\\Sensor.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAjAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-18T20:45:53.448Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\Program.cs",
+              "RelativeDocumentMoniker": "IoTClient\\Program.cs",
+              "ToolTip": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\Program.cs",
+              "RelativeToolTip": "IoTClient\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAA7AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-18T20:43:38.489Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "LoginForm.cs [Design]",
+              "DocumentMoniker": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\LoginForm.cs",
+              "RelativeDocumentMoniker": "IoTClient\\LoginForm.cs",
+              "ToolTip": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\LoginForm.cs [Design]",
+              "RelativeToolTip": "IoTClient\\LoginForm.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-18T20:45:06.333Z",
+              "EditorCaption": " [Design]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "MainForm.cs [Design]",
+              "DocumentMoniker": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\MainForm.cs",
+              "RelativeDocumentMoniker": "IoTClient\\MainForm.cs",
+              "ToolTip": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\MainForm.cs [Design]",
+              "RelativeToolTip": "IoTClient\\MainForm.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-18T20:42:32.307Z",
+              "EditorCaption": " [Design]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "SensorForm.cs [Design]",
+              "DocumentMoniker": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\SensorForm.cs",
+              "RelativeDocumentMoniker": "IoTClient\\SensorForm.cs",
+              "ToolTip": "C:\\Users\\milos\\Documents\\Studia\\inzynierka\\app\\IoTClient\\IoTClient\\SensorForm.cs [Design]",
+              "RelativeToolTip": "IoTClient\\SensorForm.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-18T20:45:20.468Z",
+              "EditorCaption": " [Design]"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
