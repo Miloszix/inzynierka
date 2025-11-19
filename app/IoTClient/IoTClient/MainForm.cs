@@ -24,6 +24,7 @@ namespace IoTClient
 
         private async void LoadSensors()
         {
+
             try
             {
                 using var client = CreateClient();
@@ -40,6 +41,8 @@ namespace IoTClient
 
         private async void LoadMeasurements(string sensorMac)
         {
+            MessageBox.Show("LoadMeasurements called with MAC: " + sensorMac);
+
             try
             {
                 using var client = CreateClient();
@@ -67,6 +70,8 @@ namespace IoTClient
 
         private void dataGridSensors_SelectionChanged(object sender, EventArgs e)
         {
+            MessageBox.Show("Clicked sensor");
+
             if (dataGridSensors.SelectedRows.Count > 0)
             {
                 var sensor = dataGridSensors.SelectedRows[0].DataBoundItem as Sensor;

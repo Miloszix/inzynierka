@@ -44,28 +44,29 @@
             dataGridSensors.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridSensors.Location = new Point(12, 12);
             dataGridSensors.Name = "dataGridSensors";
-            dataGridSensors.Size = new Size(240, 150);
+            dataGridSensors.Size = new Size(545, 366);
             dataGridSensors.TabIndex = 0;
+            dataGridSensors.CellClick += dataGridSensors_SelectionChanged;
             // 
             // dataGridMeasurements
             // 
             dataGridMeasurements.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridMeasurements.Location = new Point(548, 12);
+            dataGridMeasurements.Location = new Point(576, 12);
             dataGridMeasurements.Name = "dataGridMeasurements";
-            dataGridMeasurements.Size = new Size(240, 150);
+            dataGridMeasurements.Size = new Size(465, 366);
             dataGridMeasurements.TabIndex = 1;
             dataGridMeasurements.CellContentClick += dataGridViewMeasurements_CellContentClick;
             // 
             // txtSensorName
             // 
-            txtSensorName.Location = new Point(12, 198);
+            txtSensorName.Location = new Point(12, 413);
             txtSensorName.Name = "txtSensorName";
             txtSensorName.Size = new Size(100, 23);
             txtSensorName.TabIndex = 2;
             // 
             // btnAcceptSensor
             // 
-            btnAcceptSensor.Location = new Point(713, 198);
+            btnAcceptSensor.Location = new Point(966, 413);
             btnAcceptSensor.Name = "btnAcceptSensor";
             btnAcceptSensor.Size = new Size(75, 23);
             btnAcceptSensor.TabIndex = 3;
@@ -74,14 +75,14 @@
             // 
             // txtSensorMac
             // 
-            txtSensorMac.Location = new Point(12, 263);
+            txtSensorMac.Location = new Point(12, 384);
             txtSensorMac.Name = "txtSensorMac";
             txtSensorMac.Size = new Size(100, 23);
             txtSensorMac.TabIndex = 4;
             // 
             // btnRename
             // 
-            btnRename.Location = new Point(713, 263);
+            btnRename.Location = new Point(966, 384);
             btnRename.Name = "btnRename";
             btnRename.Size = new Size(75, 23);
             btnRename.TabIndex = 5;
@@ -91,7 +92,7 @@
             // lblGateway
             // 
             lblGateway.AutoSize = true;
-            lblGateway.Location = new Point(372, 32);
+            lblGateway.Location = new Point(547, 392);
             lblGateway.Name = "lblGateway";
             lblGateway.Size = new Size(38, 15);
             lblGateway.TabIndex = 6;
@@ -101,7 +102,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(1053, 574);
             Controls.Add(lblGateway);
             Controls.Add(btnRename);
             Controls.Add(txtSensorMac);
