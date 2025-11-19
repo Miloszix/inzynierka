@@ -9,6 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Measurment.cs" />
+    <Compile Remove="Sensor.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ScottPlot.WinForms" Version="5.1.57" />
     <PackageReference Include="System.Net.Http.Json" Version="10.0.0" />
   </ItemGroup>
 

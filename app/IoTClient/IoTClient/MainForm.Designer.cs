@@ -2,15 +2,33 @@
 {
     partial class MainForm
     {
-        /// <summary>
-        ///  Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        ///  Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        private System.Windows.Forms.Label lblGateway;
+        private System.Windows.Forms.Panel panelTop;
+
+        private System.Windows.Forms.SplitContainer splitMain;
+        private System.Windows.Forms.SplitContainer splitRight;
+
+        private System.Windows.Forms.DataGridView dataGridSensors;
+        private System.Windows.Forms.DataGridView dataGridPending;
+
+        private System.Windows.Forms.GroupBox groupSensors;
+        private System.Windows.Forms.GroupBox groupCharts;
+        private System.Windows.Forms.GroupBox groupPending;
+
+        private System.Windows.Forms.Button btnAccept;
+        private System.Windows.Forms.Button btnIgnore;
+
+        private System.Windows.Forms.TabControl tabControlCharts;
+        private System.Windows.Forms.TabPage tabTemp;
+        private System.Windows.Forms.TabPage tabHum;
+        private System.Windows.Forms.TabPage tabPress;
+
+        private ScottPlot.WinForms.FormsPlot formsPlotTemp;
+        private ScottPlot.WinForms.FormsPlot formsPlotHum;
+        private ScottPlot.WinForms.FormsPlot formsPlotPress;
+
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -20,112 +38,139 @@
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
 
-        /// <summary>
-        ///  Required method for Designer support - do not modify
-        ///  the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
-            dataGridSensors = new DataGridView();
-            dataGridMeasurements = new DataGridView();
-            txtSensorName = new TextBox();
-            btnAcceptSensor = new Button();
-            txtSensorMac = new TextBox();
-            btnRename = new Button();
-            lblGateway = new Label();
-            ((System.ComponentModel.ISupportInitialize)dataGridSensors).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)dataGridMeasurements).BeginInit();
-            SuspendLayout();
-            // 
-            // dataGridSensors
-            // 
-            dataGridSensors.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridSensors.Location = new Point(12, 12);
-            dataGridSensors.Name = "dataGridSensors";
-            dataGridSensors.Size = new Size(545, 366);
-            dataGridSensors.TabIndex = 0;
-            dataGridSensors.CellClick += dataGridSensors_SelectionChanged;
-            // 
-            // dataGridMeasurements
-            // 
-            dataGridMeasurements.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridMeasurements.Location = new Point(576, 12);
-            dataGridMeasurements.Name = "dataGridMeasurements";
-            dataGridMeasurements.Size = new Size(465, 366);
-            dataGridMeasurements.TabIndex = 1;
-            dataGridMeasurements.CellContentClick += dataGridViewMeasurements_CellContentClick;
-            // 
-            // txtSensorName
-            // 
-            txtSensorName.Location = new Point(12, 413);
-            txtSensorName.Name = "txtSensorName";
-            txtSensorName.Size = new Size(100, 23);
-            txtSensorName.TabIndex = 2;
-            // 
-            // btnAcceptSensor
-            // 
-            btnAcceptSensor.Location = new Point(966, 413);
-            btnAcceptSensor.Name = "btnAcceptSensor";
-            btnAcceptSensor.Size = new Size(75, 23);
-            btnAcceptSensor.TabIndex = 3;
-            btnAcceptSensor.Text = "button1";
-            btnAcceptSensor.UseVisualStyleBackColor = true;
-            // 
-            // txtSensorMac
-            // 
-            txtSensorMac.Location = new Point(12, 384);
-            txtSensorMac.Name = "txtSensorMac";
-            txtSensorMac.Size = new Size(100, 23);
-            txtSensorMac.TabIndex = 4;
-            // 
-            // btnRename
-            // 
-            btnRename.Location = new Point(966, 384);
-            btnRename.Name = "btnRename";
-            btnRename.Size = new Size(75, 23);
-            btnRename.TabIndex = 5;
-            btnRename.Text = "button1";
-            btnRename.UseVisualStyleBackColor = true;
-            // 
-            // lblGateway
-            // 
-            lblGateway.AutoSize = true;
-            lblGateway.Location = new Point(547, 392);
-            lblGateway.Name = "lblGateway";
-            lblGateway.Size = new Size(38, 15);
-            lblGateway.TabIndex = 6;
-            lblGateway.Text = "label1";
-            // 
-            // MainForm
-            // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
-            AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1053, 574);
-            Controls.Add(lblGateway);
-            Controls.Add(btnRename);
-            Controls.Add(txtSensorMac);
-            Controls.Add(btnAcceptSensor);
-            Controls.Add(txtSensorName);
-            Controls.Add(dataGridMeasurements);
-            Controls.Add(dataGridSensors);
-            Name = "MainForm";
-            Text = "Form1";
-            ((System.ComponentModel.ISupportInitialize)dataGridSensors).EndInit();
-            ((System.ComponentModel.ISupportInitialize)dataGridMeasurements).EndInit();
-            ResumeLayout(false);
-            PerformLayout();
+            this.components = new System.ComponentModel.Container();
+
+            // ============================
+            // TOP PANEL
+            // ============================
+            this.panelTop = new System.Windows.Forms.Panel();
+            this.panelTop.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panelTop.Height = 45;
+
+            this.lblGateway = new System.Windows.Forms.Label();
+            this.lblGateway.Text = "Gateway: ";
+            this.lblGateway.AutoSize = true;
+            this.lblGateway.Location = new System.Drawing.Point(15, 15);
+
+            this.panelTop.Controls.Add(this.lblGateway);
+
+            // ============================
+            // MAIN SPLIT (LEFT: SENSORS, RIGHT: CHARTS)
+            // ============================
+            this.splitMain = new System.Windows.Forms.SplitContainer();
+            this.splitMain.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitMain.Orientation = System.Windows.Forms.Orientation.Vertical;
+            this.splitMain.SplitterDistance = 400; // left side width
+
+            // ============================
+            // GROUP: SENSOR TABLE
+            // ============================
+            this.groupSensors = new System.Windows.Forms.GroupBox();
+            this.groupSensors.Text = "Sensors";
+            this.groupSensors.Dock = System.Windows.Forms.DockStyle.Fill;
+
+            this.dataGridSensors = new System.Windows.Forms.DataGridView();
+            this.dataGridSensors.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridSensors.ReadOnly = true;
+            this.dataGridSensors.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dataGridSensors.MultiSelect = false;
+
+            this.dataGridSensors.SelectionChanged += new System.EventHandler(this.dataGridSensors_SelectionChanged);
+
+            this.groupSensors.Controls.Add(this.dataGridSensors);
+            this.splitMain.Panel1.Controls.Add(this.groupSensors);
+
+            // ============================
+            // RIGHT SPLIT (Charts top, Pending bottom)
+            // ============================
+            this.splitRight = new System.Windows.Forms.SplitContainer();
+            this.splitRight.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitRight.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            this.splitRight.SplitterDistance = 350;
+
+            this.splitMain.Panel2.Controls.Add(this.splitRight);
+
+            // ============================
+            // GROUP: CHARTS (TABCONTROL)
+            // ============================
+            this.groupCharts = new System.Windows.Forms.GroupBox();
+            this.groupCharts.Text = "Charts";
+            this.groupCharts.Dock = System.Windows.Forms.DockStyle.Fill;
+
+            this.tabControlCharts = new System.Windows.Forms.TabControl();
+            this.tabControlCharts.Dock = System.Windows.Forms.DockStyle.Fill;
+
+            this.tabTemp = new System.Windows.Forms.TabPage();
+            this.tabTemp.Text = "Temperature";
+
+            this.tabHum = new System.Windows.Forms.TabPage();
+            this.tabHum.Text = "Humidity";
+
+            this.tabPress = new System.Windows.Forms.TabPage();
+            this.tabPress.Text = "Pressure";
+
+            // ScottPlot instances
+            this.formsPlotTemp = new ScottPlot.WinForms.FormsPlot();
+            this.formsPlotTemp.Dock = System.Windows.Forms.DockStyle.Fill;
+
+            this.formsPlotHum = new ScottPlot.WinForms.FormsPlot();
+            this.formsPlotHum.Dock = System.Windows.Forms.DockStyle.Fill;
+
+            this.formsPlotPress = new ScottPlot.WinForms.FormsPlot();
+            this.formsPlotPress.Dock = System.Windows.Forms.DockStyle.Fill;
+
+            // Add to tabs
+            this.tabTemp.Controls.Add(this.formsPlotTemp);
+            this.tabHum.Controls.Add(this.formsPlotHum);
+            this.tabPress.Controls.Add(this.formsPlotPress);
+
+            this.tabControlCharts.Controls.Add(this.tabTemp);
+            this.tabControlCharts.Controls.Add(this.tabHum);
+            this.tabControlCharts.Controls.Add(this.tabPress);
+
+            this.groupCharts.Controls.Add(this.tabControlCharts);
+            this.splitRight.Panel1.Controls.Add(this.groupCharts);
+
+            // ============================
+            // GROUP: PENDING SENSORS
+            // ============================
+            this.groupPending = new System.Windows.Forms.GroupBox();
+            this.groupPending.Text = "Pending Sensors";
+            this.groupPending.Dock = System.Windows.Forms.DockStyle.Fill;
+
+            this.dataGridPending = new System.Windows.Forms.DataGridView();
+            this.dataGridPending.Dock = System.Windows.Forms.DockStyle.Top;
+            this.dataGridPending.Height = 140;
+            this.dataGridPending.ReadOnly = true;
+            this.dataGridPending.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+
+            this.btnAccept = new System.Windows.Forms.Button();
+            this.btnAccept.Text = "Accept";
+            this.btnAccept.Width = 100;
+            this.btnAccept.Location = new System.Drawing.Point(20, 150);
+
+            this.btnIgnore = new System.Windows.Forms.Button();
+            this.btnIgnore.Text = "Ignore";
+            this.btnIgnore.Width = 100;
+            this.btnIgnore.Location = new System.Drawing.Point(140, 150);
+
+            this.groupPending.Controls.Add(this.dataGridPending);
+            this.groupPending.Controls.Add(this.btnAccept);
+            this.groupPending.Controls.Add(this.btnIgnore);
+
+            this.splitRight.Panel2.Controls.Add(this.groupPending);
+
+            // ============================
+            // FORM CONFIG
+            // ============================
+            this.Controls.Add(this.splitMain);
+            this.Controls.Add(this.panelTop);
+
+            this.Text = "IoT Monitoring Dashboard";
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
         }
-
-        #endregion
-
-        private DataGridView dataGridSensors;
-        private DataGridView dataGridMeasurements;
-        private TextBox txtSensorName;
-        private Button btnAcceptSensor;
-        private TextBox txtSensorMac;
-        private Button btnRename;
-        private Label lblGateway;
     }
 }

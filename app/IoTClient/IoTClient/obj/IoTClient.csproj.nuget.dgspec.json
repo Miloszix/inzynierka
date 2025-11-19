@@ -51,6 +51,10 @@
         "net10.0-windows7.0": {
           "targetAlias": "net10.0-windows",
           "dependencies": {
+            "ScottPlot.WinForms": {
+              "target": "Package",
+              "version": "[5.1.57, )"
+            },
             "System.Net.Http.Json": {
               "target": "Package",
               "version": "[10.0.0, )"
