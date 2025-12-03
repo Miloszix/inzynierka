@@ -17,11 +17,12 @@ namespace IoTClient
 
             lblGateway.Text = $"Gateway: {gatewayId}";
 
+            _ = LoadGateways();  // <<======= TU NOWOŚĆ
             LoadSensors();
-            //LoadPendingSensors();
 
             PositionLastUpdateLabel();
         }
+
 
         private HttpClient CreateClient()
         {
@@ -290,8 +291,9 @@ namespace IoTClient
 
         private void BtnSettings_Click(object sender, EventArgs e)
         {
-            //var f = new SettingsForm();
-            //f.ShowDialog();
+            var settings = new SettingsForm();
+            settings.ShowDialog();   // modalne okno ustawień
+            LoadSensors();           // odświeżenie po zmianach
         }
 
         private void BtnTable_Click(object sender, EventArgs e)
@@ -334,6 +336,26 @@ namespace IoTClient
         {
 
         }
+        private async Task LoadGateways()
+        {
+            try
+            {
+                using var client = CreateClient();
+
+                var gateways = await client.GetFromJsonAsync<List<GatewayItem>>(
+                    "http://3.70.126.6:1880/user/gateways");
+
+                Session.Gateways = gateways ?? new List<GatewayItem>();
+
+                // DEBUG:
+                Console.WriteLine("Pobrano gatewayów: " + Session.Gateways.Count);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Gateway load error: " + ex.Message);
+            }
+        }
+
     }
 
     public class Sensor
@@ -363,4 +385,12 @@ namespace IoTClient
         public double pressure { get; set; }
         public string? timestamp { get; set; }
     }
+
+    public class GatewayItem
+    {
+        public string gateway_id { get; set; }
+        public string name { get; set; }
+        public string added_at { get; set; }
+    }
+
 }

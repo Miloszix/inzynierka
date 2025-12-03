@@ -8,6 +8,7 @@ namespace IoTClient
     {
         public static string Token { get; set; }
         public static string GatewayId { get; set; }
+        public static List<GatewayItem> Gateways { get; set; } = new();
     }
 
 }

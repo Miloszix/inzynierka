@@ -18,7 +18,7 @@ namespace IoTClient
             string username = txtUsername.Text.Trim();
             string password = txtPassword.Text.Trim();
 
-            if (username == "" || password == "")
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
                 MessageBox.Show("Please enter login and password.");
                 return;
@@ -26,18 +26,31 @@ namespace IoTClient
 
             bool success = await LoginAsync(username, password);
 
-            if (success)
-            {
-                // CREATE MAIN FORM
-                MainForm m = new MainForm(Session.GatewayId);
-
-                m.Show();
-                this.Hide();
-            }
-            else
+            if (!success)
             {
                 MessageBox.Show("Login failed. Wrong username or password.");
+                return;
             }
+
+            // 🔥 Po zalogowaniu pobierz listę gatewayów użytkownika
+            await LoadUserGateways();
+
+            if (Session.Gateways.Count == 0)
+            {
+                MessageBox.Show("You do not have any assigned gateways!");
+                // Możemy i tak włączyć MainForm bez gateway_id
+                MainForm m0 = new MainForm(null);
+                m0.Show();
+                this.Hide();
+                return;
+            }
+
+            // Domyślnie wybieramy pierwszego
+            Session.GatewayId = Session.Gateways[0].gateway_id;
+
+            MainForm m = new MainForm(Session.GatewayId);
+            m.Show();
+            this.Hide();
         }
 
         private async Task<bool> LoginAsync(string username, string password)
@@ -45,12 +58,7 @@ namespace IoTClient
             try
             {
                 using var client = new HttpClient();
-
-                var payload = new
-                {
-                    username = username,
-                    password = password
-                };
+                var payload = new { username, password };
 
                 var response = await client.PostAsJsonAsync(
                     "http://3.70.126.6:1880/login", payload);
@@ -63,8 +71,6 @@ namespace IoTClient
                 if (result != null && result.success)
                 {
                     Session.Token = result.token;
-                    Session.GatewayId = result.gateway_id;
-
                     return true;
                 }
 
@@ -72,8 +78,28 @@ namespace IoTClient
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error: " + ex.Message);
+                MessageBox.Show("Network error: " + ex.Message);
                 return false;
+            }
+        }
+
+        private async Task LoadUserGateways()
+        {
+            try
+            {
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Session.Token);
+
+                var gateways = await client.GetFromJsonAsync<List<GatewayItem>>(
+                    "http://3.70.126.6:1880/user/gateways");
+
+                Session.Gateways = gateways ?? new List<GatewayItem>();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to load user gateways: " + ex.Message);
+                Session.Gateways = new List<GatewayItem>();
             }
         }
     }
@@ -82,6 +108,5 @@ namespace IoTClient
     {
         public bool success { get; set; }
         public string token { get; set; }
-        public string gateway_id { get; set; }
     }
 }
