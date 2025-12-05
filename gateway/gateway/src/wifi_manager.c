@@ -10,7 +10,7 @@ static bool g_wifi_connected = false;
 /* ============================================
  *  USTAW SWOJE WIFI TUTAJ
  * ============================================ */
-#define WIFI_SSID     "KOREK810"
+#define WIFI_SSID "KOREK810"
 #define WIFI_PASSWORD "zmalqp10"
 
 /* ============================================
@@ -19,8 +19,10 @@ static bool g_wifi_connected = false;
 static void wifi_event_handler(void *arg, esp_event_base_t base,
                                int32_t id, void *data)
 {
-    if (base == WIFI_EVENT) {
-        switch (id) {
+    if (base == WIFI_EVENT)
+    {
+        switch (id)
+        {
         case WIFI_EVENT_STA_START:
             esp_wifi_connect();
             break;
@@ -32,7 +34,8 @@ static void wifi_event_handler(void *arg, esp_event_base_t base,
             break;
         }
     }
-    else if (base == IP_EVENT && id == IP_EVENT_STA_GOT_IP) {
+    else if (base == IP_EVENT && id == IP_EVENT_STA_GOT_IP)
+    {
         g_wifi_connected = true;
 
         ip_event_got_ip_t *event = (ip_event_got_ip_t *)data;
@@ -46,9 +49,9 @@ static void wifi_event_handler(void *arg, esp_event_base_t base,
  * ============================================ */
 static void wifi_start_sta(void)
 {
-    wifi_config_t cfg = { 0 };
-    strcpy((char*)cfg.sta.ssid, WIFI_SSID);
-    strcpy((char*)cfg.sta.password, WIFI_PASSWORD);
+    wifi_config_t cfg = {0};
+    strcpy((char *)cfg.sta.ssid, WIFI_SSID);
+    strcpy((char *)cfg.sta.password, WIFI_PASSWORD);
 
     ESP_LOGI(TAG, "Connecting to SSID: %s", WIFI_SSID);
 

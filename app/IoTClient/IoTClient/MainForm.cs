@@ -8,22 +8,27 @@ namespace IoTClient
 {
     public partial class MainForm : Form
     {
-        private readonly string gatewayId;
+        private System.Windows.Forms.Timer autoRefreshTimer;
 
-        public MainForm(string gatewayId)
+        // private string currentGateway = null;
+
+        public MainForm()
         {
             InitializeComponent();
-            this.gatewayId = gatewayId;
 
-            lblGateway.Text = $"Gateway: {gatewayId}";
+            comboGateway.SelectedIndexChanged += comboGateway_SelectedIndexChanged;
 
-            _ = LoadGateways();  // <<======= TU NOWOŚĆ
-            LoadSensors();
+            _ = LoadGateways(); // async start
 
-            PositionLastUpdateLabel();
+            autoRefreshTimer = new System.Windows.Forms.Timer();
+            autoRefreshTimer.Interval = 5000; // 5000 ms = 5 sekund
+            autoRefreshTimer.Tick += AutoRefreshTimer_Tick;
+            autoRefreshTimer.Start();
         }
 
-
+        // =====================================================================
+        // HTTP AUTH CLIENT
+        // =====================================================================
         private HttpClient CreateClient()
         {
             var client = new HttpClient();
@@ -32,35 +37,98 @@ namespace IoTClient
             return client;
         }
 
-        private async void LoadSensors()
+        // =====================================================================
+        // LOAD USER GATEWAYS
+        // =====================================================================
+        private async Task LoadGateways()
         {
             try
             {
                 using var client = CreateClient();
 
-                // Pobierz wszystkie sensory (accepted + pending)
-                var allSensors = await client.GetFromJsonAsync<List<Sensor>>(
-                    "http://3.70.126.6:1880/sensors");
+                var gateways = Session.Gateways; // bo login już je pobrał
 
-                // Accepted → główna tabelka
+                comboGateway.Items.Clear();
+                comboGateway.DisplayMember = "name";
+                comboGateway.ValueMember = "gateway_id";
+
+                foreach (var g in gateways)
+                    comboGateway.Items.Add(g);
+
+                if (gateways.Count > 0)
+                {
+                    comboGateway.SelectedIndex = 0;
+
+                    Session.GatewayId = gateways[0].gateway_id;
+
+                    LoadSensors();   // ← to było brakujące
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Gateway load error: " + ex.Message);
+            }
+        }
+
+        // =====================================================================
+        // GATEWAY CHANGED
+        // =====================================================================
+        private void comboGateway_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboGateway.SelectedItem is GatewayItem gw)
+            {
+                Session.GatewayId = gw.gateway_id;
+
+                LoadSensors();  // ← pobierz sensory dla tego gatewaya
+            }
+        }
+
+
+        // =====================================================================
+        // LOAD SENSORS FOR CURRENT GATEWAY
+        // =====================================================================
+        private async void LoadSensors()
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(Session.GatewayId))
+                {
+                    MessageBox.Show("No gateway selected.");
+                    return;
+                }
+
+                using var client = CreateClient();
+
+                // TYLKO JEDEN 'url' – poprawione
+                string endpoint = $"http://3.70.126.6:1880/sensors?gateway_id={Session.GatewayId}";
+
+                var allSensors = await client.GetFromJsonAsync<List<Sensor>>(endpoint);
+
+                if (allSensors == null)
+                    allSensors = new List<Sensor>();
+
+                // ACCEPTED
                 var sensors = allSensors
                     .Where(s => s.status == "accepted")
                     .ToList();
 
-                // Pending → osobna tabelka
+                // PENDING
                 var pending = allSensors
                     .Where(s => s.status == "pending")
                     .ToList();
 
                 dataGridPending.DataSource = pending;
 
-                // Build visible accepted table
+                // budowanie tabeli z wartościami "latest"
                 var table = new List<SensorLatest>();
 
                 foreach (var s in sensors)
                 {
-                    string url = $"http://3.70.126.6:1880/measurements?sensor_mac={Uri.EscapeDataString(s.sensor_mac)}";
-                    var meas = await client.GetFromJsonAsync<List<Measurement>>(url);
+                    string endpointMeas =
+                            $"http://3.70.126.6:1880/measurements?sensor_mac={Uri.EscapeDataString(s.sensor_mac)}&gateway_id={Session.GatewayId}";
+
+
+                    var meas = await client.GetFromJsonAsync<List<Measurement>>(endpointMeas);
 
                     var latest = meas?
                         .Where(m => !string.IsNullOrWhiteSpace(m.timestamp))
@@ -82,7 +150,7 @@ namespace IoTClient
 
                 dataGridSensors.DataSource = table;
 
-                // HYBRYDA Fill + AllCells
+                // AutoSize
                 dataGridSensors.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
                 foreach (DataGridViewColumn col in dataGridSensors.Columns)
                     col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
@@ -92,6 +160,11 @@ namespace IoTClient
                 MessageBox.Show($"Sensor load error: {ex.Message}");
             }
         }
+
+
+        // =====================================================================
+        // ACCEPT SENSOR
+        // =====================================================================
         private async void BtnAccept_Click(object sender, EventArgs e)
         {
             if (dataGridPending.SelectedRows.Count == 0)
@@ -101,14 +174,11 @@ namespace IoTClient
             }
 
             var sensor = dataGridPending.SelectedRows[0].DataBoundItem as Sensor;
-
-            if (sensor == null || string.IsNullOrWhiteSpace(sensor.sensor_mac))
+            if (sensor == null)
             {
-                MessageBox.Show("Brak sensor_mac – popraw klasę Sensor!");
+                MessageBox.Show("Błąd – brak danych sensora.");
                 return;
             }
-            
-            // MessageBox.Show("MAC wysyłany: " + sensor.sensor_mac); // debug
 
             try
             {
@@ -116,20 +186,17 @@ namespace IoTClient
 
                 var payload = new
                 {
-                    sensor_mac = sensor.sensor_mac
+                    sensor_mac = sensor.sensor_mac,
+                    gateway_id = Session.GatewayId
                 };
 
-                var res = await client.PostAsJsonAsync("http://3.70.126.6:1880/accept_sensor", payload);
+                var res = await client.PostAsJsonAsync(
+                    "http://3.70.126.6:1880/accept_sensor", payload);
 
                 if (res.IsSuccessStatusCode)
-                {
                     LoadSensors();
-                    // MessageBox.Show("Sensor zaakceptowany.");
-                }
                 else
-                {
-                    MessageBox.Show("Błąd podczas akceptacji.");
-                }
+                    MessageBox.Show("Błąd akceptacji sensora.");
             }
             catch (Exception ex)
             {
@@ -137,7 +204,9 @@ namespace IoTClient
             }
         }
 
-
+        // =====================================================================
+        // IGNORE SENSOR
+        // =====================================================================
         private async void BtnIgnore_Click(object sender, EventArgs e)
         {
             if (dataGridPending.SelectedRows.Count == 0)
@@ -147,8 +216,6 @@ namespace IoTClient
             }
 
             var sensor = dataGridPending.SelectedRows[0].DataBoundItem as Sensor;
-            if (sensor == null)
-                return;
 
             try
             {
@@ -157,19 +224,16 @@ namespace IoTClient
                 var payload = new
                 {
                     sensor_mac = sensor.sensor_mac,
+                    gateway_id = Session.GatewayId
                 };
 
-                var res = await client.PostAsJsonAsync("http://3.70.126.6:1880/ignore_sensor", payload);
+                var res = await client.PostAsJsonAsync(
+                    "http://3.70.126.6:1880/ignore_sensor", payload);
 
                 if (res.IsSuccessStatusCode)
-                {
                     LoadSensors();
-                    //MessageBox.Show("Sensor usunięty.");
-                }
                 else
-                {
-                    MessageBox.Show("Błąd podczas ignorowania.");
-                }
+                    MessageBox.Show("Błąd ignorowania sensora.");
             }
             catch (Exception ex)
             {
@@ -177,6 +241,19 @@ namespace IoTClient
             }
         }
 
+        private void BtnSettings_Click(object sender, EventArgs e)
+        {
+            var sf = new SettingsForm();
+            sf.ShowDialog();
+
+            // po powrocie z ustawień trzeba odświeżyć gatewaye i sensory
+            _ = LoadGateways();
+        }
+
+
+        // =====================================================================
+        // SENSOR SELECTED → DRAW CHARTS
+        // =====================================================================
         private void dataGridSensors_SelectionChanged(object sender, EventArgs e)
         {
             if (dataGridSensors.SelectedRows.Count == 0)
@@ -184,40 +261,21 @@ namespace IoTClient
 
             var row = dataGridSensors.SelectedRows[0].DataBoundItem as SensorLatest;
             if (row != null)
-            {
                 DrawCharts(row.sensor_mac);
-            }
         }
 
-        private void ApplyDarkStyle(ScottPlot.Plot plt)
-        {
-            plt.FigureBackground.Color = ScottPlot.Colors.Black;
-            plt.DataBackground.Color = ScottPlot.Color.FromHex("#1E1E1E");
-
-            plt.Grid.MajorLineColor = ScottPlot.Color.FromHex("#333333");
-            plt.Grid.MinorLineColor = ScottPlot.Color.FromARGB(0);
-
-            plt.Axes.Color(ScottPlot.Colors.White);
-            plt.Axes.Title.Label.ForeColor = ScottPlot.Colors.White;
-            plt.Axes.Bottom.TickLabelStyle.ForeColor = ScottPlot.Colors.White;
-            plt.Axes.Left.TickLabelStyle.ForeColor = ScottPlot.Colors.White;
-
-            plt.Legend.BackgroundColor = ScottPlot.Color.FromHex("#222222");
-            plt.Legend.OutlineColor = ScottPlot.Colors.Gray;
-            plt.Legend.FontColor = ScottPlot.Colors.White;
-        }
-
-        // ==============================
-        // MAIN DRAW FUNCTION
-        // ==============================
+        // =====================================================================
+        // DRAW CHARTS
+        // =====================================================================
         private async void DrawCharts(string mac)
         {
             try
             {
                 using var client = CreateClient();
 
-                string url = $"http://3.70.126.6:1880/measurements?sensor_mac={Uri.EscapeDataString(mac)}";
-                var m = await client.GetFromJsonAsync<List<Measurement>>(url);
+                var m = await client.GetFromJsonAsync<List<Measurement>>(
+                    $"http://3.70.126.6:1880/measurements?sensor_mac={Uri.EscapeDataString(mac)}&gateway_id={Session.GatewayId}");
+
 
                 if (m == null || m.Count == 0)
                 {
@@ -234,37 +292,30 @@ namespace IoTClient
                     .Select(x => DateTime.Parse(x.timestamp))
                     .ToArray();
 
-                double[] xs = dts
-                    .Select(dt => dt.ToOADate())
-                    .ToArray();
-
                 double[] temps = ordered.Select(x => x.temperature).ToArray();
                 double[] hums = ordered.Select(x => x.humidity).ToArray();
                 double[] press = ordered.Select(x => x.pressure).ToArray();
 
-                // TEMPERATURE
+                // --- Temperature ---
                 var tplt = formsPlotTemp.Plot;
                 tplt.Clear();
-                var tline = tplt.Add.Scatter(dts, temps);
-                tline.LegendText = "Temperature (°C)";
+                tplt.Add.Scatter(dts, temps).LegendText = "Temperature (°C)";
                 tplt.Legend.IsVisible = true;
                 tplt.Axes.AutoScale();
                 tplt.Axes.DateTimeTicksBottom();
 
-                // HUMIDITY
+                // --- Humidity ---
                 var hplt = formsPlotHum.Plot;
                 hplt.Clear();
-                var hline = hplt.Add.Scatter(dts, hums);
-                hline.LegendText = "Humidity (%)";
+                hplt.Add.Scatter(dts, hums).LegendText = "Humidity (%)";
                 hplt.Legend.IsVisible = true;
                 hplt.Axes.AutoScale();
                 hplt.Axes.DateTimeTicksBottom();
 
-                // PRESSURE
+                // --- Pressure ---
                 var pplt = formsPlotPress.Plot;
                 pplt.Clear();
-                var pline = pplt.Add.Scatter(dts, press);
-                pline.LegendText = "Pressure (hPa)";
+                pplt.Add.Scatter(dts, press).LegendText = "Pressure (hPa)";
                 pplt.Legend.IsVisible = true;
                 pplt.Axes.AutoScale();
                 pplt.Axes.DateTimeTicksBottom();
@@ -277,30 +328,37 @@ namespace IoTClient
                 formsPlotHum.Refresh();
                 formsPlotPress.Refresh();
 
-                lblLastUpload.Text = "Last update: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                
-                PositionLastUpdateLabel();
+                lblLastUpload.Text =
+                    "Last update: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
+                PositionLastUpdateLabel();
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Plot error: " + ex.Message);
             }
-
         }
 
-        private void BtnSettings_Click(object sender, EventArgs e)
+        private void AutoRefreshTimer_Tick(object? sender, EventArgs e)
         {
-            var settings = new SettingsForm();
-            settings.ShowDialog();   // modalne okno ustawień
-            LoadSensors();           // odświeżenie po zmianach
+            // Brak wybranego gateway — nic nie odświeżamy
+            if (string.IsNullOrWhiteSpace(Session.GatewayId))
+                return;
+
+            // Pobierz sensory
+            LoadSensors();
+
+            // Jeśli jakiś sensor jest zaznaczony → odśwież wykres
+            if (dataGridSensors.SelectedRows.Count > 0)
+            {
+                var row = dataGridSensors.SelectedRows[0].DataBoundItem as SensorLatest;
+                if (row != null)
+                {
+                    DrawCharts(row.sensor_mac);
+                }
+            }
         }
 
-        private void BtnTable_Click(object sender, EventArgs e)
-        {
-            //var f = new AllMeasurementsForm();
-            //f.Show();
-        }
 
         private void ClearAllPlots()
         {
@@ -315,54 +373,42 @@ namespace IoTClient
 
         private void PositionLastUpdateLabel()
         {
-            // upewnij się, że etykieta policzy poprawnie rozmiar tekstu
             lblLastUpload.AutoSize = true;
             lblLastUpload.Refresh();
 
-            // padding od prawej krawędzi panelu (zmień jeśli chcesz inną odległość)
             int rightPadding = 12;
 
-            // ustaw X tak, aby etykieta była wyrównana do prawej wewnątrz panelTop
-            int newLeft = panelTop.ClientSize.Width - lblLastUpload.Width - rightPadding;
-            if (newLeft < 10) newLeft = 10; // minimalna lewa margines, zapobiega wyjściu poza okno
+            lblLastUpload.Left =
+                panelTop.ClientSize.Width - lblLastUpload.Width - rightPadding;
 
-            lblLastUpload.Left = newLeft;
-
-            // wyśrodkuj w pionie w panelTop
-            lblLastUpload.Top = Math.Max((panelTop.ClientSize.Height - lblLastUpload.Height) / 2, 2);
+            lblLastUpload.Top =
+                Math.Max((panelTop.ClientSize.Height - lblLastUpload.Height) / 2, 2);
         }
 
-        private void lblLastUpload_Click(object sender, EventArgs e)
+        private void ApplyDarkStyle(ScottPlot.Plot plt)
         {
+            plt.FigureBackground.Color = ScottPlot.Colors.Black;
+            plt.DataBackground.Color = ScottPlot.Color.FromHex("#1E1E1E");
 
+            plt.Grid.MajorLineColor = ScottPlot.Color.FromHex("#333333");
+            plt.Grid.MinorLineColor = ScottPlot.Color.FromARGB(0);
+
+            plt.Axes.Color(ScottPlot.Colors.White);
+
+            plt.Legend.BackgroundColor = ScottPlot.Color.FromHex("#222222");
+            plt.Legend.FontColor = ScottPlot.Colors.White;
         }
-        private async Task LoadGateways()
-        {
-            try
-            {
-                using var client = CreateClient();
-
-                var gateways = await client.GetFromJsonAsync<List<GatewayItem>>(
-                    "http://3.70.126.6:1880/user/gateways");
-
-                Session.Gateways = gateways ?? new List<GatewayItem>();
-
-                // DEBUG:
-                Console.WriteLine("Pobrano gatewayów: " + Session.Gateways.Count);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Gateway load error: " + ex.Message);
-            }
-        }
-
     }
+
+    // =====================================================================
+    // MODELS
+    // =====================================================================
 
     public class Sensor
     {
-        public int id { get; set; }                // ← OBOWIĄZKOWE
+        public int id { get; set; }
         public string? gateway_id { get; set; }
-        public string? sensor_mac { get; set; }    // ← WAŻNE!
+        public string? sensor_mac { get; set; }
         public string? name { get; set; }
         public string? status { get; set; }
         public string? timestamp { get; set; }
@@ -392,5 +438,4 @@ namespace IoTClient
         public string name { get; set; }
         public string added_at { get; set; }
     }
-
 }

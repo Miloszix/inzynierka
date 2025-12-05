@@ -24,32 +24,23 @@ namespace IoTClient
                 return;
             }
 
+            btnLogin.Enabled = false;
+
             bool success = await LoginAsync(username, password);
 
             if (!success)
             {
                 MessageBox.Show("Login failed. Wrong username or password.");
+                btnLogin.Enabled = true;
                 return;
             }
 
-            // 🔥 Po zalogowaniu pobierz listę gatewayów użytkownika
+            // 🔥 Pobierz gatewaye użytkownika
             await LoadUserGateways();
 
-            if (Session.Gateways.Count == 0)
-            {
-                MessageBox.Show("You do not have any assigned gateways!");
-                // Możemy i tak włączyć MainForm bez gateway_id
-                MainForm m0 = new MainForm(null);
-                m0.Show();
-                this.Hide();
-                return;
-            }
-
-            // Domyślnie wybieramy pierwszego
-            Session.GatewayId = Session.Gateways[0].gateway_id;
-
-            MainForm m = new MainForm(Session.GatewayId);
-            m.Show();
+            // Nawet jeśli użytkownik nie ma gatewayów → MainForm i tak się otworzy
+            MainForm main = new MainForm();
+            main.Show();
             this.Hide();
         }
 
@@ -88,8 +79,10 @@ namespace IoTClient
             try
             {
                 using var client = new HttpClient();
+
                 client.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Session.Token);
+                    new System.Net.Http.Headers.AuthenticationHeaderValue(
+                        "Bearer", Session.Token);
 
                 var gateways = await client.GetFromJsonAsync<List<GatewayItem>>(
                     "http://3.70.126.6:1880/user/gateways");

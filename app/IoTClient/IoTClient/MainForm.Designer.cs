@@ -8,7 +8,7 @@ namespace IoTClient
     {
         private System.ComponentModel.IContainer components = null;
 
-        private System.Windows.Forms.Label lblGateway;
+        private System.Windows.Forms.ComboBox comboGateway;
         private System.Windows.Forms.Label lblLastUpload;
         private System.Windows.Forms.Panel panelTop;
 
@@ -48,7 +48,7 @@ namespace IoTClient
         private void InitializeComponent()
         {
             panelTop = new Panel();
-            lblGateway = new Label();
+            comboGateway = new ComboBox();
             lblLastUpload = new Label();
             splitMain = new SplitContainer();
             leftLayout = new TableLayoutPanel();
@@ -86,27 +86,23 @@ namespace IoTClient
             tabHum.SuspendLayout();
             tabPress.SuspendLayout();
             SuspendLayout();
-            // 
+            // comboGateway
+            comboGateway = new ComboBox();
+            comboGateway.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboGateway.Location = new Point(10, 10);
+            comboGateway.Name = "comboGateway";
+            comboGateway.Size = new Size(200, 23);
+            comboGateway.TabIndex = 0;
+
             // panelTop
-            // 
             panelTop.BackColor = Color.FromArgb(40, 40, 40);
-            panelTop.Controls.Add(lblGateway);
+            panelTop.Controls.Add(comboGateway);
             panelTop.Controls.Add(lblLastUpload);
             panelTop.Dock = DockStyle.Top;
             panelTop.Location = new Point(0, 0);
             panelTop.Name = "panelTop";
             panelTop.Size = new Size(1129, 45);
             panelTop.TabIndex = 1;
-            // 
-            // lblGateway
-            // 
-            lblGateway.AutoSize = true;
-            lblGateway.ForeColor = Color.White;
-            lblGateway.Location = new Point(10, 12);
-            lblGateway.Name = "lblGateway";
-            lblGateway.Size = new Size(55, 15);
-            lblGateway.TabIndex = 0;
-            lblGateway.Text = "Gateway:";
             // 
             // lblLastUpload
             // 
@@ -197,7 +193,7 @@ namespace IoTClient
             btnTable.Size = new Size(100, 40);
             btnTable.TabIndex = 0;
             btnTable.Text = "Tabela";
-            btnTable.Click += BtnTable_Click;
+            //btnTable.Click += BtnTable_Click;
             // 
             // btnSettings
             // 

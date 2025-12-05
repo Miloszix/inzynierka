@@ -12,70 +12,80 @@ static const char *GATEWAY_ID = "GW001";
 /* EVENT HANDLER (inner) */
 static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
 {
-    if (!event) return ESP_FAIL;
+    if (!event)
+        return ESP_FAIL;
 
     switch (event->event_id)
     {
-        case MQTT_EVENT_CONNECTED: {
-            ESP_LOGI(TAG, "MQTT connected");
+    case MQTT_EVENT_CONNECTED:
+    {
+        ESP_LOGI(TAG, "MQTT connected");
 
-            char sub[128];
-            snprintf(sub, sizeof(sub),
-                     "server/%s/sensor/+/status", GATEWAY_ID);
+        char sub[128];
+        snprintf(sub, sizeof(sub),
+                 "server/%s/sensor/+/status", GATEWAY_ID);
 
-            esp_mqtt_client_subscribe(event->client, sub, 1);
-            ESP_LOGI(TAG, "Subscribed to %s", sub);
-        }
-        break;
+        esp_mqtt_client_subscribe(event->client, sub, 1);
+        ESP_LOGI(TAG, "Subscribed to %s", sub);
 
-        case MQTT_EVENT_DATA:
+        char sub_sync[128];
+        snprintf(sub_sync, sizeof(sub_sync),
+                 "server/%s/sync_response", GATEWAY_ID);
+
+        esp_mqtt_client_subscribe(event->client, sub_sync, 1);
+        ESP_LOGI(TAG, "Subscribed to %s", sub_sync);
+
+        mqtt_request_sync();
+    }
+    break;
+
+    case MQTT_EVENT_DATA:
+    {
+        char topic[128] = {0};
+        strncpy(topic, event->topic, event->topic_len);
+
+        char payload[256] = {0};
+        strncpy(payload, event->data, event->data_len);
+
+        // Odbiór: server/GW001/sync_response
+        char sync_topic[64];
+        snprintf(sync_topic, sizeof(sync_topic),
+                 "server/%s/sync_response", GATEWAY_ID);
+
+        if (strcmp(topic, sync_topic) == 0)
         {
-            char topic[128] = {0};
-            strncpy(topic, event->topic, event->topic_len);
+            ESP_LOGI(TAG, "Received sync response: %s", payload);
 
-            char payload[256] = {0};
-            strncpy(payload, event->data, event->data_len);
+            cJSON *root = cJSON_Parse(payload);
+            if (!root)
+                break;
 
-            ESP_LOGI(TAG, "Topic: %s", topic);
-            ESP_LOGI(TAG, "Payload: %s", payload);
+            cJSON *arr = cJSON_GetObjectItem(root, "sensors");
+            if (cJSON_IsArray(arr))
+            {
+                int count = cJSON_GetArraySize(arr);
+                for (int i = 0; i < count; i++)
+                {
+                    cJSON *item = cJSON_GetArrayItem(arr, i);
+                    const char *mac = cJSON_GetObjectItem(item, "mac")->valuestring;
+                    const char *status = cJSON_GetObjectItem(item, "status")->valuestring;
 
-            // Expected: server/GW001/sensor/<MAC>/status
-            char prefix[64];
-            snprintf(prefix, sizeof(prefix),
-                     "server/%s/sensor/", GATEWAY_ID);
+                    bool approved = strcmp(status, "accepted") == 0;
 
-            if (strncmp(topic, prefix, strlen(prefix)) == 0) {
+                    sensor_set_approved(mac, approved);
+                    // sensor_set_reported(mac, true);
 
-                const char *rest = topic + strlen(prefix);
-                const char *mac_end = strstr(rest, "/status");
-                if (!mac_end) break;
-
-                char mac[32] = {0};
-                int len = mac_end - rest;
-                strncpy(mac, rest, len);
-
-                cJSON *root = cJSON_Parse(payload);
-                if (!root) break;
-
-                cJSON *status = cJSON_GetObjectItem(root, "status");
-                if (cJSON_IsString(status)) {
-
-                    if (strcmp(status->valuestring, "accepted") == 0) {
-                        sensor_set_approved(mac, true);
-                        ESP_LOGI(TAG, "Sensor %s ACCEPTED", mac);
-                    }
-                    else if (strcmp(status->valuestring, "ignored") == 0) {
-                        sensor_set_approved(mac, false);
-                        ESP_LOGI(TAG, "Sensor %s IGNORED", mac);
-                    }
+                    ESP_LOGI(TAG, "Sensor %s -> %s", mac, approved ? "ACCEPTED" : "IGNORED");
                 }
-                cJSON_Delete(root);
             }
-        }
-        break;
 
-        default:
-            break;
+            cJSON_Delete(root);
+        }
+    }
+    break;
+
+    default:
+        break;
     }
 
     return ESP_OK;
@@ -90,7 +100,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
 
 void mqtt_notify_gateway_online()
 {
-    if (!mqtt_client) return;
+    if (!mqtt_client)
+        return;
 
     char topic[64];
     snprintf(topic, sizeof(topic),
@@ -108,7 +119,8 @@ void mqtt_notify_gateway_online()
 /* INIT MQTT */
 void mqtt_init(void)
 {
-    if (mqtt_client) return;
+    if (mqtt_client)
+        return;
 
     esp_mqtt_client_config_t cfg = {
         .broker.address.uri = "mqtt://3.70.126.6",
@@ -153,3 +165,18 @@ void mqtt_send_sensor_data(const char *mac, float t, float h, float p)
     esp_mqtt_client_publish(mqtt_client, topic, payload, 0, 1, 0);
 }
 
+void mqtt_request_sync()
+{
+    if (!mqtt_client)
+        return;
+
+    char topic[64];
+    snprintf(topic, sizeof(topic),
+             "gateway/%s/request_sync", GATEWAY_ID);
+
+    const char *payload = "{\"request\":\"sync\"}";
+
+    esp_mqtt_client_publish(mqtt_client, topic, payload, 0, 1, 0);
+
+    ESP_LOGI(TAG, "Sync request sent");
+}

@@ -276,5 +276,9 @@ void ble_update_measurements(float temperature, float humidity, float pressure)
     g_temp  = temperature;
     g_hum   = humidity;
     g_press = pressure;
+
+    ble_gap_adv_stop();         // zatrzymaj
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+    start_advertising();        // ustaw nowe dane i odpal
 }
 
