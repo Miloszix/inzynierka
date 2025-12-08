@@ -11,10 +11,16 @@ namespace IoTClient
         public SettingsForm()
         {
             InitializeComponent();
-            LoadSensors();
-            LoadGateways();
+
+            // zdarzenie wyboru gateway'a
+            dataGateways.SelectionChanged += dataGateways_SelectionChanged;
+
+            LoadGateways(); // po załadowaniu gatewayów automatycznie wczyta sensory
         }
 
+        // ============================================================
+        //  AUTH HTTP CLIENT
+        // ============================================================
         private HttpClient Client()
         {
             var c = new HttpClient();
@@ -23,17 +29,20 @@ namespace IoTClient
             return c;
         }
 
-        // ------------------------------------------------------------
-        // LOAD SENSOR LIST
-        // ------------------------------------------------------------
-        private async void LoadSensors()
+        // ============================================================
+        //  LOAD SENSORS — tylko dla wybranego gatewaya
+        // ============================================================
+        private async void LoadSensors(string gatewayId)
         {
             try
             {
                 using var client = Client();
-                var sensors = await client.GetFromJsonAsync<List<Sensor>>("http://3.70.126.6:1880/sensors");
+
+                var sensors = await client.GetFromJsonAsync<List<Sensor>>(
+                    $"http://3.70.126.6:1880/sensors?gateway_id={gatewayId}");
 
                 dataSensors.DataSource = sensors;
+
                 foreach (DataGridViewColumn col in dataSensors.Columns)
                     col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             }
@@ -43,20 +52,29 @@ namespace IoTClient
             }
         }
 
-        // ------------------------------------------------------------
-        // LOAD GATEWAYS LIST
-        // ------------------------------------------------------------
+        // ============================================================
+        //  LOAD GATEWAYS LIST
+        // ============================================================
         private async void LoadGateways()
         {
             try
             {
                 using var client = Client();
+
                 var gateways = await client.GetFromJsonAsync<List<UserGateway>>(
                     "http://3.70.126.6:1880/user/gateways");
 
                 dataGateways.DataSource = gateways;
+
                 foreach (DataGridViewColumn col in dataGateways.Columns)
                     col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+
+                // auto-select first gateway
+                if (gateways.Count > 0)
+                {
+                    dataGateways.Rows[0].Selected = true;
+                    LoadSensors(gateways[0].gateway_id);
+                }
             }
             catch (Exception ex)
             {
@@ -64,21 +82,35 @@ namespace IoTClient
             }
         }
 
-        // ------------------------------------------------------------
-        // DELETE GATEWAY FROM USER
-        // ------------------------------------------------------------
+        // ============================================================
+        //  GATEWAY SELECTED → LOAD ITS SENSORS
+        // ============================================================
+        private void dataGateways_SelectionChanged(object sender, EventArgs e)
+        {
+            if (dataGateways.SelectedRows.Count == 0)
+                return;
+
+            if (dataGateways.SelectedRows[0].DataBoundItem is UserGateway gw)
+            {
+                LoadSensors(gw.gateway_id);
+            }
+        }
+
+        // ============================================================
+        //  DELETE GATEWAY FROM USER
+        // ============================================================
         private async void btnDeleteGateway_Click(object sender, EventArgs e)
         {
             if (dataGateways.SelectedRows.Count == 0)
                 return;
 
             var gw = dataGateways.SelectedRows[0].DataBoundItem as UserGateway;
-
             if (gw == null)
                 return;
 
-            var confirm = MessageBox.Show($"Remove gateway {gw.gateway_id}?",
-                                          "Confirm", MessageBoxButtons.YesNo);
+            var confirm = MessageBox.Show(
+                $"Remove gateway {gw.gateway_id}?",
+                "Confirm", MessageBoxButtons.YesNo);
 
             if (confirm != DialogResult.Yes)
                 return;
@@ -87,19 +119,19 @@ namespace IoTClient
             {
                 using var client = Client();
 
-                var payload = new
-                {
-                    gateway_id = gw.gateway_id
-                };
+                var payload = new { gateway_id = gw.gateway_id };
 
-                var res = await client.PostAsJsonAsync("http://3.70.126.6:1880/user/remove_gateway", payload);
+                var res = await client.PostAsJsonAsync(
+                    "http://3.70.126.6:1880/user/remove_gateway", payload);
 
                 if (res.IsSuccessStatusCode)
                 {
                     LoadGateways();
                 }
                 else
+                {
                     MessageBox.Show("Gateway remove failed.");
+                }
             }
             catch (Exception ex)
             {
@@ -107,9 +139,9 @@ namespace IoTClient
             }
         }
 
-        // ------------------------------------------------------------
-        // ADD GATEWAY → open AddGatewayForm
-        // ------------------------------------------------------------
+        // ============================================================
+        //  ADD GATEWAY
+        // ============================================================
         private void btnAddGateway_Click(object sender, EventArgs e)
         {
             var addForm = new AddGatewayForm();
@@ -119,21 +151,30 @@ namespace IoTClient
             }
         }
 
-        // ------------------------------------------------------------
-        // EDIT SENSOR NAME
-        // ------------------------------------------------------------
+        // ============================================================
+        //  EDIT SENSOR NAME
+        // ============================================================
         private async void btnEditSensor_Click(object sender, EventArgs e)
         {
             if (dataSensors.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Select a sensor first.");
+                return;
+            }
+
+            if (dataSensors.SelectedRows[0].DataBoundItem is not Sensor sensor)
+            {
+                MessageBox.Show("Invalid sensor data.");
+                return;
+            }
+
+            // otwieramy okno RenameForm
+            var f = new RenameForm(sensor.sensor_mac!, sensor.name ?? "");
+
+            if (f.ShowDialog() != DialogResult.OK)
                 return;
 
-            var sensor = dataSensors.SelectedRows[0].DataBoundItem as Sensor;
-            if (sensor == null)
-                return;
-
-            string newName = Microsoft.VisualBasic.Interaction.InputBox(
-                "New sensor name:", "Rename Sensor", sensor.name);
-
+            string newName = f.NewName;
             if (string.IsNullOrWhiteSpace(newName))
                 return;
 
@@ -144,24 +185,122 @@ namespace IoTClient
                 var payload = new
                 {
                     sensor_mac = sensor.sensor_mac,
+                    gateway_id = sensor.gateway_id,
                     new_name = newName
                 };
 
-                var res = await client.PostAsJsonAsync("http://3.70.126.6:1880/rename_sensor", payload);
+                var res = await client.PostAsJsonAsync(
+                    "http://3.70.126.6:1880/rename_sensor", payload);
 
                 if (res.IsSuccessStatusCode)
-                    LoadSensors();
+                {
+                    // przeładuj sensory wybranego gatewaya
+                    if (dataGateways.SelectedRows.Count > 0 &&
+                        dataGateways.SelectedRows[0].DataBoundItem is UserGateway gw)
+                    {
+                        LoadSensors(gw.gateway_id);
+                    }
+                }
                 else
-                    MessageBox.Show("Rename failed.");
+                {
+                    MessageBox.Show("Rename failed: " + res.StatusCode);
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Rename sensor error: " + ex.Message);
             }
         }
+        private async void btnAcceptSensor_Click(object sender, EventArgs e)
+        {
+            if (dataSensors.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Select a sensor first.");
+                return;
+            }
+
+            var sensor = dataSensors.SelectedRows[0].DataBoundItem as Sensor;
+            if (sensor == null)
+                return;
+
+            try
+            {
+                using var client = Client();
+
+                var payload = new
+                {
+                    sensor_mac = sensor.sensor_mac,
+                    gateway_id = sensor.gateway_id
+                };
+
+                var res = await client.PostAsJsonAsync(
+                    "http://3.70.126.6:1880/accept_sensor", payload);
+
+                if (res.IsSuccessStatusCode)
+                {
+                    if (dataGateways.SelectedRows.Count > 0 &&
+                        dataGateways.SelectedRows[0].DataBoundItem is UserGateway gw)
+                    {
+                        LoadSensors(gw.gateway_id);
+                    }
+                }
+                else
+                    MessageBox.Show("Accept failed.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Accept error: " + ex.Message);
+            }
+        }
+
+        private async void btnIgnoreSensor_Click(object sender, EventArgs e)
+        {
+            if (dataSensors.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Select a sensor first.");
+                return;
+            }
+
+            var sensor = dataSensors.SelectedRows[0].DataBoundItem as Sensor;
+            if (sensor == null)
+                return;
+
+            try
+            {
+                using var client = Client();
+
+                var payload = new
+                {
+                    sensor_mac = sensor.sensor_mac,
+                    gateway_id = sensor.gateway_id
+                };
+
+                var res = await client.PostAsJsonAsync(
+                    "http://3.70.126.6:1880/ignore_sensor", payload);
+
+                if (res.IsSuccessStatusCode)
+                {
+                    if (dataGateways.SelectedRows.Count > 0 &&
+                        dataGateways.SelectedRows[0].DataBoundItem is UserGateway gw)
+                    {
+                        LoadSensors(gw.gateway_id);
+                    }
+                }
+                else
+                    MessageBox.Show("Ignore failed.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ignore error: " + ex.Message);
+            }
+        }
+
+
     }
 
-    // MODELE DO TABEL
+    // ======================================================================
+    //  MODELE DO TABEL
+    // ======================================================================
 
     public class UserGateway
     {

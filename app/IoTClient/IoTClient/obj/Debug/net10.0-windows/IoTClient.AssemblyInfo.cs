@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("IoTClient")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e36c1cd751b675690602bce267e387b8deaed82c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+54a05c09c005ec39510dde0aacec478f4ea31437")]
 [assembly: System.Reflection.AssemblyProductAttribute("IoTClient")]
 [assembly: System.Reflection.AssemblyTitleAttribute("IoTClient")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

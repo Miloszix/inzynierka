@@ -13,6 +13,12 @@ namespace IoTClient
             InitializeComponent();
         }
 
+        private void btnRegister_Click(object sender, EventArgs e)
+        {
+            var f = new RegisterForm();
+            f.ShowDialog();
+        }
+
         private async void btnLogin_Click(object sender, EventArgs e)
         {
             string username = txtUsername.Text.Trim();

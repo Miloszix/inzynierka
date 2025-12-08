@@ -52,13 +52,15 @@ namespace IoTClient
             lblLastUpload = new Label();
             splitMain = new SplitContainer();
             leftLayout = new TableLayoutPanel();
+            panel1 = new Panel();
+            btnAccept = new Button();
+            btnIgnore = new Button();
             groupSensors = new GroupBox();
             dataGridSensors = new DataGridView();
             panelButtons = new Panel();
+            btn_rename = new Button();
             btnTable = new Button();
             btnSettings = new Button();
-            btnAccept = new Button();
-            btnIgnore = new Button();
             groupPending = new GroupBox();
             dataGridPending = new DataGridView();
             groupCharts = new GroupBox();
@@ -75,6 +77,7 @@ namespace IoTClient
             splitMain.Panel2.SuspendLayout();
             splitMain.SuspendLayout();
             leftLayout.SuspendLayout();
+            panel1.SuspendLayout();
             groupSensors.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridSensors).BeginInit();
             panelButtons.SuspendLayout();
@@ -86,15 +89,9 @@ namespace IoTClient
             tabHum.SuspendLayout();
             tabPress.SuspendLayout();
             SuspendLayout();
-            // comboGateway
-            comboGateway = new ComboBox();
-            comboGateway.DropDownStyle = ComboBoxStyle.DropDownList;
-            comboGateway.Location = new Point(10, 10);
-            comboGateway.Name = "comboGateway";
-            comboGateway.Size = new Size(200, 23);
-            comboGateway.TabIndex = 0;
-
+            // 
             // panelTop
+            // 
             panelTop.BackColor = Color.FromArgb(40, 40, 40);
             panelTop.Controls.Add(comboGateway);
             panelTop.Controls.Add(lblLastUpload);
@@ -103,6 +100,14 @@ namespace IoTClient
             panelTop.Name = "panelTop";
             panelTop.Size = new Size(1129, 45);
             panelTop.TabIndex = 1;
+            // 
+            // comboGateway
+            // 
+            comboGateway.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboGateway.Location = new Point(10, 10);
+            comboGateway.Name = "comboGateway";
+            comboGateway.Size = new Size(200, 23);
+            comboGateway.TabIndex = 0;
             // 
             // lblLastUpload
             // 
@@ -136,18 +141,48 @@ namespace IoTClient
             // 
             leftLayout.ColumnCount = 1;
             leftLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
+            leftLayout.Controls.Add(panel1, 0, 3);
             leftLayout.Controls.Add(groupSensors, 0, 0);
             leftLayout.Controls.Add(panelButtons, 0, 1);
             leftLayout.Controls.Add(groupPending, 0, 2);
             leftLayout.Dock = DockStyle.Fill;
             leftLayout.Location = new Point(0, 0);
             leftLayout.Name = "leftLayout";
-            leftLayout.RowCount = 3;
+            leftLayout.RowCount = 4;
             leftLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 389F));
             leftLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 84F));
             leftLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            leftLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 86F));
             leftLayout.Size = new Size(667, 891);
             leftLayout.TabIndex = 0;
+            // 
+            // panel1
+            // 
+            panel1.Controls.Add(btnAccept);
+            panel1.Controls.Add(btnIgnore);
+            panel1.Dock = DockStyle.Fill;
+            panel1.Location = new Point(3, 808);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(661, 80);
+            panel1.TabIndex = 3;
+            // 
+            // btnAccept
+            // 
+            btnAccept.Location = new Point(10, 20);
+            btnAccept.Name = "btnAccept";
+            btnAccept.Size = new Size(100, 40);
+            btnAccept.TabIndex = 2;
+            btnAccept.Text = "Accept";
+            btnAccept.Click += BtnAccept_Click;
+            // 
+            // btnIgnore
+            // 
+            btnIgnore.Location = new Point(116, 20);
+            btnIgnore.Name = "btnIgnore";
+            btnIgnore.Size = new Size(100, 40);
+            btnIgnore.TabIndex = 3;
+            btnIgnore.Text = "Ignore";
+            btnIgnore.Click += BtnIgnore_Click;
             // 
             // groupSensors
             // 
@@ -176,51 +211,41 @@ namespace IoTClient
             // 
             // panelButtons
             // 
+            panelButtons.Controls.Add(btn_rename);
             panelButtons.Controls.Add(btnTable);
             panelButtons.Controls.Add(btnSettings);
-            panelButtons.Controls.Add(btnAccept);
-            panelButtons.Controls.Add(btnIgnore);
             panelButtons.Dock = DockStyle.Fill;
             panelButtons.Location = new Point(3, 392);
             panelButtons.Name = "panelButtons";
             panelButtons.Size = new Size(661, 78);
             panelButtons.TabIndex = 1;
             // 
+            // btn_rename
+            // 
+            btn_rename.Location = new Point(215, 20);
+            btn_rename.Name = "btn_rename";
+            btn_rename.Size = new Size(100, 40);
+            btn_rename.TabIndex = 4;
+            btn_rename.Text = "Rename";
+            btn_rename.Click += btn_rename_click;
+            // 
             // btnTable
             // 
-            btnTable.Location = new Point(10, 20);
+            btnTable.Location = new Point(3, 20);
             btnTable.Name = "btnTable";
             btnTable.Size = new Size(100, 40);
             btnTable.TabIndex = 0;
-            btnTable.Text = "Tabela";
-            //btnTable.Click += BtnTable_Click;
+            btnTable.Text = "Measurements";
+            btnTable.Click += btn_measurments_clicked;
             // 
             // btnSettings
             // 
-            btnSettings.Location = new Point(120, 20);
+            btnSettings.Location = new Point(109, 20);
             btnSettings.Name = "btnSettings";
             btnSettings.Size = new Size(100, 40);
             btnSettings.TabIndex = 1;
             btnSettings.Text = "Settings";
             btnSettings.Click += BtnSettings_Click;
-            // 
-            // btnAccept
-            // 
-            btnAccept.Location = new Point(230, 20);
-            btnAccept.Name = "btnAccept";
-            btnAccept.Size = new Size(100, 40);
-            btnAccept.TabIndex = 2;
-            btnAccept.Text = "Accept";
-            btnAccept.Click += BtnAccept_Click;
-            // 
-            // btnIgnore
-            // 
-            btnIgnore.Location = new Point(340, 20);
-            btnIgnore.Name = "btnIgnore";
-            btnIgnore.Size = new Size(100, 40);
-            btnIgnore.TabIndex = 3;
-            btnIgnore.Text = "Ignore";
-            btnIgnore.Click += BtnIgnore_Click;
             // 
             // groupPending
             // 
@@ -228,10 +253,11 @@ namespace IoTClient
             groupPending.Dock = DockStyle.Fill;
             groupPending.Location = new Point(3, 476);
             groupPending.Name = "groupPending";
-            groupPending.Size = new Size(661, 412);
+            groupPending.Size = new Size(661, 326);
             groupPending.TabIndex = 2;
             groupPending.TabStop = false;
             groupPending.Text = "Pending Sensors";
+            groupPending.Enter += groupPending_Enter;
             // 
             // dataGridPending
             // 
@@ -241,11 +267,12 @@ namespace IoTClient
             dataGridPending.Name = "dataGridPending";
             dataGridPending.ReadOnly = true;
             dataGridPending.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dataGridPending.Size = new Size(655, 390);
+            dataGridPending.Size = new Size(655, 304);
             dataGridPending.TabIndex = 0;
             // 
             // groupCharts
             // 
+            groupCharts.BackColor = Color.WhiteSmoke;
             groupCharts.Controls.Add(tabControlCharts);
             groupCharts.Dock = DockStyle.Fill;
             groupCharts.Location = new Point(0, 0);
@@ -336,6 +363,7 @@ namespace IoTClient
             ((System.ComponentModel.ISupportInitialize)splitMain).EndInit();
             splitMain.ResumeLayout(false);
             leftLayout.ResumeLayout(false);
+            panel1.ResumeLayout(false);
             groupSensors.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dataGridSensors).EndInit();
             panelButtons.ResumeLayout(false);
@@ -348,5 +376,8 @@ namespace IoTClient
             tabPress.ResumeLayout(false);
             ResumeLayout(false);
         }
+
+        private Button btn_rename;
+        private Panel panel1;
     }
 }

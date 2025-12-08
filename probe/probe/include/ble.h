@@ -2,6 +2,7 @@
 #define BLE_H
 
 #include "esp_err.h"
+#include <stdbool.h>
 
 #include "services/gap/ble_svc_gap.h"
 
@@ -14,9 +15,8 @@
 
 void ble_init(void);
 void ble_update_measurements(float temperature, float humidity, float pressure);
+void start_advertising(uint32_t duration_ms);
 
-void adv_init(void);
-int gap_init(void);
-
+extern volatile bool ble_synced;
 
 #endif // BLE_H

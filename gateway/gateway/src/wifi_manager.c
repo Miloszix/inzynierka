@@ -10,8 +10,8 @@ static bool g_wifi_connected = false;
 /* ============================================
  *  USTAW SWOJE WIFI TUTAJ
  * ============================================ */
-#define WIFI_SSID "KOREK810"
-#define WIFI_PASSWORD "zmalqp10"
+#define WIFI_SSID "moja_siec"
+#define WIFI_PASSWORD "mojasiec"
 
 /* ============================================
  *   HANDLERY EVENTÓW
