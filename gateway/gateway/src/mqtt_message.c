@@ -1,13 +1,18 @@
 #include "mqtt_message.h"
 #include "sensor_manager.h"
+#include "lte_manager.h"
+#include "config.h"
 #include "esp_log.h"
 #include "mqtt_client.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include <cJSON.h>
 
 static const char *TAG = "MQTT";
 static esp_mqtt_client_handle_t mqtt_client = NULL;
 
-static const char *GATEWAY_ID = "GW001";
+static bool mqtt_connected = false;
+static bool mqtt_started = false;
 
 /* EVENT HANDLER (inner) */
 static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
@@ -20,6 +25,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
     case MQTT_EVENT_CONNECTED:
     {
         ESP_LOGI(TAG, "MQTT connected");
+        mqtt_connected = true;
 
         char sub[128];
         snprintf(sub, sizeof(sub),
@@ -46,6 +52,44 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
 
         char payload[256] = {0};
         strncpy(payload, event->data, event->data_len);
+
+        // server/GW001/sensor/<MAC>/status
+        char status_prefix[64];
+        snprintf(status_prefix, sizeof(status_prefix),
+                 "server/%s/sensor/", GATEWAY_ID);
+
+        if (strncmp(topic, status_prefix, strlen(status_prefix)) == 0 &&
+            strstr(topic, "/status"))
+        {
+            // Wyciągamy MAC z topicu
+            // topic = server/GW001/sensor/AA:BB:CC:DD:EE:FF/status
+
+            char mac[18] = {0};
+            const char *p = topic + strlen(status_prefix);
+            const char *slash = strstr(p, "/status");
+
+            if (slash && (slash - p) < sizeof(mac))
+            {
+                strncpy(mac, p, slash - p);
+
+                cJSON *root = cJSON_Parse(payload);
+                if (root)
+                {
+                    const char *status =
+                        cJSON_GetObjectItem(root, "status")->valuestring;
+
+                    bool approved = strcmp(status, "accepted") == 0;
+
+                    sensor_set_approved(mac, approved);
+
+                    ESP_LOGI(TAG, "LIVE UPDATE: Sensor %s -> %s",
+                             mac, approved ? "ACCEPTED" : "IGNORED");
+
+                    cJSON_Delete(root);
+                }
+            }
+            return ESP_OK;
+        }
 
         // Odbiór: server/GW001/sync_response
         char sync_topic[64];
@@ -83,6 +127,14 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
         }
     }
     break;
+    case MQTT_EVENT_DISCONNECTED:
+        ESP_LOGW(TAG, "MQTT disconnected");
+        mqtt_connected = false;
+        break;
+    case MQTT_EVENT_ERROR:
+        ESP_LOGE(TAG, "MQTT error");
+        mqtt_connected = false;
+        break;
 
     default:
         break;
@@ -119,26 +171,58 @@ void mqtt_notify_gateway_online()
 /* INIT MQTT */
 void mqtt_init(void)
 {
-    if (mqtt_client)
+    if (mqtt_started)
         return;
+
+    ESP_LOGI(TAG, "Waiting for LTE connection...");
+
+    int retry = 0;
+    while (!lte_manager_is_connected() && retry < 120)
+    {
+        vTaskDelay(pdMS_TO_TICKS(500));
+        retry++;
+    }
+
+    if (!lte_manager_is_connected())
+    {
+        ESP_LOGW(TAG, "LTE not connected, MQTT not started");
+        return;
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(3000));
 
     esp_mqtt_client_config_t cfg = {
         .broker.address.uri = "mqtt://3.70.126.6",
+
+        // ===== LTE-M CRITICAL SETTINGS =====
+        .session.keepalive = 300,             // 5 minut
+        .network.timeout_ms = 30000,          // 30s TCP timeout
+        .network.reconnect_timeout_ms = 20000 // 20s reconnect
     };
 
     mqtt_client = esp_mqtt_client_init(&cfg);
-    esp_mqtt_client_register_event(mqtt_client,
-                                   ESP_EVENT_ANY_ID,
-                                   mqtt_event_handler,
-                                   NULL);
+    esp_mqtt_client_register_event(
+        mqtt_client,
+        ESP_EVENT_ANY_ID,
+        mqtt_event_handler,
+        NULL);
+
     esp_mqtt_client_start(mqtt_client);
 
-    mqtt_notify_gateway_online();
+    mqtt_started = true;
+
+    ESP_LOGI(TAG, "MQTT client started");
 }
 
 /* GATEWAY → SERVER (new sensor) */
 void mqtt_send_new_sensor(const char *mac)
 {
+    if (!mqtt_client)
+    {
+        ESP_LOGW(TAG, "MQTT not initialized");
+        return;
+    }
+
     char topic[128];
     snprintf(topic, sizeof(topic),
              "gateway/%s/sensor/new", GATEWAY_ID);
@@ -153,6 +237,12 @@ void mqtt_send_new_sensor(const char *mac)
 /* GATEWAY → SERVER (data) */
 void mqtt_send_sensor_data(const char *mac, float t, float h, float p)
 {
+    if (!mqtt_client)
+    {
+        ESP_LOGW(TAG, "MQTT not initialized");
+        return;
+    }
+
     char topic[128];
     snprintf(topic, sizeof(topic),
              "gateway/%s/sensor/%s/data", GATEWAY_ID, mac);

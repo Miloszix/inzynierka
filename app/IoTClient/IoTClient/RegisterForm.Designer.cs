@@ -4,21 +4,21 @@
     {
         private TextBox txtUser;
         private TextBox txtPass;
-        private TextBox txtEmail;
+        private TextBox txtPassConfirm;
         private Button btnRegister;
         private Label lblUser;
         private Label lblPass;
-        private Label lblEmail;
+        private Label lblPassConfirm;
 
         private void InitializeComponent()
         {
             txtUser = new TextBox();
             txtPass = new TextBox();
-            txtEmail = new TextBox();
+            txtPassConfirm = new TextBox();
             btnRegister = new Button();
             lblUser = new Label();
             lblPass = new Label();
-            lblEmail = new Label();
+            lblPassConfirm = new Label();
 
             SuspendLayout();
 
@@ -28,40 +28,45 @@
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
 
+            // USERNAME
             lblUser.Text = "Username:";
             lblUser.ForeColor = Color.White;
             lblUser.Location = new Point(30, 30);
             lblUser.AutoSize = true;
 
-            txtUser.Location = new Point(130, 28);
-            txtUser.Width = 180;
+            txtUser.Location = new Point(150, 28);
+            txtUser.Width = 160;
             txtUser.BackColor = Color.FromArgb(45, 45, 45);
             txtUser.ForeColor = Color.White;
 
+            // PASSWORD
             lblPass.Text = "Password:";
             lblPass.ForeColor = Color.White;
             lblPass.Location = new Point(30, 80);
             lblPass.AutoSize = true;
 
-            txtPass.Location = new Point(130, 78);
-            txtPass.Width = 180;
+            txtPass.Location = new Point(150, 78);
+            txtPass.Width = 160;
             txtPass.PasswordChar = '*';
             txtPass.BackColor = Color.FromArgb(45, 45, 45);
             txtPass.ForeColor = Color.White;
 
-            lblEmail.Text = "Email:";
-            lblEmail.ForeColor = Color.White;
-            lblEmail.Location = new Point(30, 130);
-            lblEmail.AutoSize = true;
+            // CONFIRM PASSWORD
+            lblPassConfirm.Text = "Confirm:";
+            lblPassConfirm.ForeColor = Color.White;
+            lblPassConfirm.Location = new Point(30, 130);
+            lblPassConfirm.AutoSize = true;
 
-            txtEmail.Location = new Point(130, 128);
-            txtEmail.Width = 180;
-            txtEmail.BackColor = Color.FromArgb(45, 45, 45);
-            txtEmail.ForeColor = Color.White;
+            txtPassConfirm.Location = new Point(150, 128);
+            txtPassConfirm.Width = 160;
+            txtPassConfirm.PasswordChar = '*';
+            txtPassConfirm.BackColor = Color.FromArgb(45, 45, 45);
+            txtPassConfirm.ForeColor = Color.White;
 
+            // BUTTON
             btnRegister.Text = "CREATE ACCOUNT";
-            btnRegister.Location = new Point(130, 180);
-            btnRegister.Size = new Size(180, 35);
+            btnRegister.Location = new Point(150, 180);
+            btnRegister.Size = new Size(160, 35);
             btnRegister.Click += btnRegister_Click;
             btnRegister.FlatStyle = FlatStyle.Flat;
             btnRegister.FlatAppearance.BorderSize = 0;
@@ -72,12 +77,11 @@
             Controls.Add(txtUser);
             Controls.Add(lblPass);
             Controls.Add(txtPass);
-            Controls.Add(lblEmail);
-            Controls.Add(txtEmail);
+            Controls.Add(lblPassConfirm);
+            Controls.Add(txtPassConfirm);
             Controls.Add(btnRegister);
 
             ResumeLayout(false);
         }
     }
-
 }

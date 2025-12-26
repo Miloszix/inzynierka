@@ -407,10 +407,19 @@ namespace IoTClient
             }
         }
 
+        private int refreshCounter = 0;
         private async void AutoRefreshTimer_Tick(object? sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(Session.GatewayId))
                 return;
+            refreshCounter++;
+
+            // co 3 ticki (15s) pełny reload (pending + accepted)
+            if (refreshCounter % 3 == 0)
+            {
+                LoadSensors();
+                return;
+            }
 
             await SharedIncrementalUpdate();
         }

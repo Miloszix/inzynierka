@@ -10,12 +10,12 @@
 #include "host/ble_hs.h"
 #include "host/util/util.h"
 
+#include "config.h"
 #include "ble_scanner.h"
 #include "data_sender.h"
 
 // --- Configuration ---
 #define TAG "BLE_SCANNER"
-#define MANUFACTURER_ID_FILTER 0x1234
 
 #ifndef BLE_ADDR_STR_LEN
 #define BLE_ADDR_STR_LEN 18
@@ -87,18 +87,12 @@ static void ble_app_on_sync(void)
 static void start_scan(void)
 {
     struct ble_gap_disc_params params = {
-        // .itvl = BLE_GAP_SCAN_FAST_INTERVAL_MIN,
-        // .window = BLE_GAP_SCAN_FAST_WINDOW,
-        // .filter_policy = 0,
-        // .limited = 0,
-        // .passive = 1,
-        // .filter_duplicates = 1
         .itvl = 0x10,
         .window = 0x10,
         .filter_policy = 0,
         .limited = 0,
-        .passive = 0,          // AKTYWNY !
-        .filter_duplicates = 0 // odbierasz każdy pakiet
+        .passive = 1,
+        .filter_duplicates = 1 // odbierasz jeden pakiet
     };
 
     ESP_LOGI(TAG, "Starting BLE scan");

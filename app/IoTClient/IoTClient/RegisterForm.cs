@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 
 namespace IoTClient
 {
@@ -12,12 +13,20 @@ namespace IoTClient
         private async void btnRegister_Click(object sender, EventArgs e)
         {
             string username = txtUser.Text.Trim();
-            string password = txtPass.Text.Trim();
-            string email = txtEmail.Text.Trim();
+            string pass1 = txtPass.Text;
+            string pass2 = txtPassConfirm.Text;
 
-            if (username == "" || password == "")
+            if (string.IsNullOrWhiteSpace(username) ||
+                string.IsNullOrWhiteSpace(pass1) ||
+                string.IsNullOrWhiteSpace(pass2))
             {
-                MessageBox.Show("Username and password required.");
+                MessageBox.Show("All fields are required.");
+                return;
+            }
+
+            if (pass1 != pass2)
+            {
+                MessageBox.Show("Passwords do not match.");
                 return;
             }
 
@@ -26,17 +35,31 @@ namespace IoTClient
             var payload = new
             {
                 username,
-                password,
-                email
+                password = pass1
             };
 
-            var res = await client.PostAsJsonAsync("http://3.70.126.6:1880/register", payload);
+            HttpResponseMessage res;
 
-            if (res.IsSuccessStatusCode)
+            try
+            {
+                res = await client.PostAsJsonAsync(
+                    "http://3.70.126.6:1880/register", payload);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Connection error: " + ex.Message);
+                return;
+            }
+
+            if (res.StatusCode == HttpStatusCode.Created)
             {
                 MessageBox.Show("Account created!");
                 DialogResult = DialogResult.OK;
                 Close();
+            }
+            else if (res.StatusCode == HttpStatusCode.Conflict)
+            {
+                MessageBox.Show("Username already exists.");
             }
             else
             {

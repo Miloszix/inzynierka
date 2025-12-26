@@ -1,4 +1,5 @@
 #include "wifi_manager.h"
+#include "config.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
@@ -6,12 +7,6 @@
 
 static const char *TAG = "WIFI_MANAGER";
 static bool g_wifi_connected = false;
-
-/* ============================================
- *  USTAW SWOJE WIFI TUTAJ
- * ============================================ */
-#define WIFI_SSID "moja_siec"
-#define WIFI_PASSWORD "mojasiec"
 
 /* ============================================
  *   HANDLERY EVENTÓW

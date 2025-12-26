@@ -1,5 +1,6 @@
 #include "sensor_manager.h"
 #include <string.h>
+#include "esp_log.h"
 
 typedef struct
 {
@@ -37,9 +38,17 @@ bool sensor_is_approved(const char *mac)
 
 void sensor_add_pending(const char *mac)
 {
-    strcpy(sensors[sensor_count].mac, mac);
-    sensors[sensor_count].approved = false;
-    sensor_count++;
+    if (sensor_exists(mac))
+        return;
+
+    if (sensor_count < 32)
+    {
+        strcpy(sensors[sensor_count].mac, mac);
+        sensors[sensor_count].approved = false;
+        sensor_count++;
+
+        ESP_LOGI("SENSOR_MGR", "Sensor %s added as PENDING", mac);
+    }
 }
 
 void sensor_set_approved(const char *mac, bool approved)
@@ -49,7 +58,18 @@ void sensor_set_approved(const char *mac, bool approved)
         if (strcmp(sensors[i].mac, mac) == 0)
         {
             sensors[i].approved = approved;
-            break;
+            return;
         }
+    }
+
+    // ❗ SENSOR NIE ISTNIAŁ → DODAJEMY GO
+    if (sensor_count < 32)
+    {
+        strcpy(sensors[sensor_count].mac, mac);
+        sensors[sensor_count].approved = approved;
+        sensor_count++;
+
+        ESP_LOGI("SENSOR_MGR", "Sensor %s added from sync (%s)",
+                 mac, approved ? "ACCEPTED" : "IGNORED");
     }
 }
