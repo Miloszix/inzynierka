@@ -193,11 +193,13 @@ void mqtt_init(void)
 
     esp_mqtt_client_config_t cfg = {
         .broker.address.uri = "mqtt://3.70.126.6",
+        .session.disable_clean_session = false,
+        .credentials.client_id = GATEWAY_ID,
+        .session.keepalive = 10,
+        .network.timeout_ms = 10000, // Zwiększ do 60s
+        .network.reconnect_timeout_ms = 1000,
+        .buffer.size = 1024, // Upewnij się, że bufor jest wystarczający
 
-        // ===== LTE-M CRITICAL SETTINGS =====
-        .session.keepalive = 300,             // 5 minut
-        .network.timeout_ms = 30000,          // 30s TCP timeout
-        .network.reconnect_timeout_ms = 20000 // 20s reconnect
     };
 
     mqtt_client = esp_mqtt_client_init(&cfg);

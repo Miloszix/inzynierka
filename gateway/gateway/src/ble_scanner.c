@@ -17,6 +17,9 @@
 // --- Configuration ---
 #define TAG "BLE_SCANNER"
 
+static struct ble_npl_callout scan_reset_timer;
+#define SCAN_RESET_MS 60000 // Reset co 60 sekund
+
 #ifndef BLE_ADDR_STR_LEN
 #define BLE_ADDR_STR_LEN 18
 #endif
@@ -35,6 +38,7 @@ static int ble_gap_event(struct ble_gap_event *event, void *arg);
 static void start_scan(void);
 static void format_ble_addr(const ble_addr_t *addr, char *str);
 void ble_host_task(void *param);
+static void scan_reset_timer_cb(struct ble_npl_event *ev);
 
 // --- Global ---
 static uint8_t own_addr_type;
@@ -56,6 +60,20 @@ void ble_init(void)
     ble_hs_cfg.store_status_cb = ble_store_util_status_rr;
 
     nimble_port_freertos_init(ble_host_task);
+
+    ble_npl_callout_init(&scan_reset_timer, nimble_port_get_dflt_eventq(),
+                         scan_reset_timer_cb, NULL);
+}
+
+static void scan_reset_timer_cb(struct ble_npl_event *ev)
+{
+    ESP_LOGI(TAG, "Resetting scan to clear duplicate filter...");
+
+    // Zatrzymaj obecne skanowanie
+    ble_gap_disc_cancel();
+
+    // Uruchom skanowanie ponownie
+    start_scan();
 }
 
 void ble_host_task(void *param)
@@ -100,7 +118,13 @@ static void start_scan(void)
     int rc = ble_gap_disc(own_addr_type, BLE_HS_FOREVER,
                           &params, ble_gap_event, NULL);
 
-    if (rc != 0)
+    if (rc == 0)
+    {
+        // Resetuj timer na 60 sekund
+        ble_npl_callout_reset(&scan_reset_timer,
+                              ble_npl_time_ms_to_ticks32(SCAN_RESET_MS));
+    }
+    else
     {
         ESP_LOGE(TAG, "ble_gap_disc failed: %d", rc);
     }
