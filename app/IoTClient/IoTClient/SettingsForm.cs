@@ -8,19 +8,17 @@ namespace IoTClient
 {
     public partial class SettingsForm : Form
     {
+        public string? LastAddedGatewayId { get; private set; }
+        public List<UserGateway> UpdatedGateways { get; private set; } = new();
+        public bool GatewaysChanged { get; private set; } = false;
         public SettingsForm()
         {
             InitializeComponent();
 
-            // zdarzenie wyboru gateway'a
             dataGateways.SelectionChanged += dataGateways_SelectionChanged;
 
-            LoadGateways(); // po załadowaniu gatewayów automatycznie wczyta sensory
+            LoadGateways();
         }
-
-        // ============================================================
-        //  AUTH HTTP CLIENT
-        // ============================================================
         private HttpClient Client()
         {
             var c = new HttpClient();
@@ -29,9 +27,6 @@ namespace IoTClient
             return c;
         }
 
-        // ============================================================
-        //  LOAD SENSORS — tylko dla wybranego gatewaya
-        // ============================================================
         private async void LoadSensors(string gatewayId)
         {
             try
@@ -52,9 +47,6 @@ namespace IoTClient
             }
         }
 
-        // ============================================================
-        //  LOAD GATEWAYS LIST
-        // ============================================================
         private async void LoadGateways()
         {
             try
@@ -69,12 +61,13 @@ namespace IoTClient
                 foreach (DataGridViewColumn col in dataGateways.Columns)
                     col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
 
-                // auto-select first gateway
                 if (gateways.Count > 0)
                 {
                     dataGateways.Rows[0].Selected = true;
                     LoadSensors(gateways[0].gateway_id);
                 }
+
+                UpdatedGateways = gateways;
             }
             catch (Exception ex)
             {
@@ -82,9 +75,7 @@ namespace IoTClient
             }
         }
 
-        // ============================================================
-        //  GATEWAY SELECTED → LOAD ITS SENSORS
-        // ============================================================
+
         private void dataGateways_SelectionChanged(object sender, EventArgs e)
         {
             if (dataGateways.SelectedRows.Count == 0)
@@ -96,9 +87,6 @@ namespace IoTClient
             }
         }
 
-        // ============================================================
-        //  DELETE GATEWAY FROM USER
-        // ============================================================
         private async void btnDeleteGateway_Click(object sender, EventArgs e)
         {
             if (dataGateways.SelectedRows.Count == 0)
@@ -126,6 +114,7 @@ namespace IoTClient
 
                 if (res.IsSuccessStatusCode)
                 {
+                    GatewaysChanged = true;
                     LoadGateways();
                 }
                 else
@@ -139,21 +128,17 @@ namespace IoTClient
             }
         }
 
-        // ============================================================
-        //  ADD GATEWAY
-        // ============================================================
         private void btnAddGateway_Click(object sender, EventArgs e)
         {
             var addForm = new AddGatewayForm();
             if (addForm.ShowDialog() == DialogResult.OK)
             {
+                GatewaysChanged = true;
+                LastAddedGatewayId = addForm.AddedGateway?.gateway_id;
                 LoadGateways();
             }
         }
 
-        // ============================================================
-        //  EDIT SENSOR NAME
-        // ============================================================
         private async void btnEditSensor_Click(object sender, EventArgs e)
         {
             if (dataSensors.SelectedRows.Count == 0)
@@ -295,12 +280,65 @@ namespace IoTClient
             }
         }
 
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+
+            if (GatewaysChanged)
+                DialogResult = DialogResult.OK;
+        }
+
+        private async void btnRenameGateway_Click(object sender, EventArgs e)
+        {
+            if (dataGateways.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Select gateway first.");
+                return;
+            }
+
+            if (dataGateways.SelectedRows[0].DataBoundItem is not UserGateway gw)
+                return;
+
+            var f = new RenameForm(gw.gateway_id, gw.name);
+            if (f.ShowDialog() != DialogResult.OK)
+                return;
+
+            string newName = f.NewName;
+            if (string.IsNullOrWhiteSpace(newName))
+                return;
+
+            try
+            {
+                using var client = Client();
+
+                var payload = new
+                {
+                    gateway_id = gw.gateway_id,
+                    new_name = newName
+                };
+
+                var res = await client.PostAsJsonAsync(
+                    "http://3.70.126.6:1880/user/rename_gateway",
+                    payload
+                );
+
+                if (res.IsSuccessStatusCode)
+                {
+                    GatewaysChanged = true;
+                    LoadGateways();
+                }
+                else
+                {
+                    MessageBox.Show("Rename failed.");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Rename error: " + ex.Message);
+            }
+        }
 
     }
-
-    // ======================================================================
-    //  MODELE DO TABEL
-    // ======================================================================
 
     public class UserGateway
     {

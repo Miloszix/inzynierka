@@ -40,11 +40,12 @@ static void ip_event_handler(void *arg, esp_event_base_t base, int32_t id, void 
 
 static void modem_hardware_reset(void)
 {
+
     gpio_reset_pin(MODEM_PWRKEY);
     gpio_set_direction(MODEM_PWRKEY, GPIO_MODE_OUTPUT);
     ESP_LOGI(TAG, "Power cycling modem...");
     gpio_set_level(MODEM_PWRKEY, 0);
-    vTaskDelay(pdMS_TO_TICKS(1200));
+    vTaskDelay(pdMS_TO_TICKS(1500));
     gpio_set_level(MODEM_PWRKEY, 1);
     vTaskDelay(pdMS_TO_TICKS(5000));
 }
@@ -61,6 +62,13 @@ esp_err_t lte_manager_init(void)
         esp_event_handler_register(IP_EVENT, ESP_EVENT_ANY_ID, &ip_event_handler, NULL);
         base_inited = true;
     }
+    if (dce)
+    {
+        esp_modem_set_mode(dce, ESP_MODEM_MODE_COMMAND);
+        vTaskDelay(pdMS_TO_TICKS(500));
+        esp_modem_destroy(dce);
+        dce = NULL;
+    }
 
     if (!ppp_netif)
     {
@@ -68,49 +76,67 @@ esp_err_t lte_manager_init(void)
         ppp_netif = esp_netif_new(&cfg);
     }
 
-    if (dce)
-    {
-        esp_modem_destroy(dce);
-        dce = NULL;
-    }
-
-    modem_hardware_reset();
-
+    // 3. Konfiguracja UART/DTE
     esp_modem_dte_config_t dte_cfg = ESP_MODEM_DTE_DEFAULT_CONFIG();
     dte_cfg.uart_config.port_num = MODEM_UART;
     dte_cfg.uart_config.tx_io_num = MODEM_TX;
     dte_cfg.uart_config.rx_io_num = MODEM_RX;
     dte_cfg.uart_config.baud_rate = MODEM_BAUD;
-    dte_cfg.uart_config.rx_buffer_size = 4096;
 
     esp_modem_dce_config_t dce_cfg = ESP_MODEM_DCE_DEFAULT_CONFIG(MODEM_APN);
-
     dce = esp_modem_new_dev(ESP_MODEM_DCE_SIM7000, &dte_cfg, &dce_cfg, ppp_netif);
-    if (!dce)
-        return ESP_FAIL;
 
-    // Konfiguracja LTE-M i PDP
+    ESP_LOGI(TAG, "Checking modem response...");
+    if (esp_modem_at(dce, "AT", NULL, 500) != ESP_OK)
+    {
+        ESP_LOGW(TAG, "Modem not responding, pulsing PWRKEY...");
+        modem_hardware_reset();
+        // Po hard-resecie trzeba poczekać chwilę na bootloader modemu
+        vTaskDelay(pdMS_TO_TICKS(3000));
+    }
+
+    if (esp_modem_at(dce, "ATE0", NULL, 1000) != ESP_OK)
+        return ESP_FAIL; // Wyłącz echo
     esp_modem_at(dce, "AT+CFUN=1", NULL, 1000);
-    esp_modem_at(dce, "AT+CIPSHUT", NULL, 1000);
+
+    esp_modem_at(dce, "AT+CNMP=38", NULL, 1000); // LTE Only
+    esp_modem_at(dce, "AT+CMNB=1", NULL, 1000);  // LTE-M (lub 3 dla obu)
 
     char pdp_cmd[64];
     snprintf(pdp_cmd, sizeof(pdp_cmd), "AT+CGDCONT=1,\"IP\",\"%s\"", MODEM_APN);
     esp_modem_at(dce, pdp_cmd, NULL, 1000);
 
-    esp_modem_at(dce, "AT+CNMP=38", NULL, 1000); // LTE Only
-    esp_modem_at(dce, "AT+CMNB=1", NULL, 1000);  // LTE-M
-
-    ESP_LOGI(TAG, "Waiting for registration...");
-    for (int i = 0; i < 20; i++)
+    ESP_LOGI(TAG, "Waiting for network registration...");
+    bool registered = false;
+    for (int i = 0; i < 30; i++)
     {
-        char res[64];
+        char res[64] = {0};
         esp_modem_at(dce, "AT+CGREG?", res, 1000);
-        if (strstr(res, "+CGREG: 0,1") || strstr(res, "+CGREG: 0,5"))
+        if (strstr(res, ",1") || strstr(res, ",5"))
+        {
+            registered = true;
             break;
+        }
         vTaskDelay(pdMS_TO_TICKS(2000));
+        ESP_LOGI(TAG, "Still waiting...");
     }
 
-    return esp_modem_set_mode(dce, ESP_MODEM_MODE_DATA);
+    if (!registered)
+    {
+        ESP_LOGE(TAG, "Failed to register!");
+        return ESP_FAIL;
+    }
+
+    // 6. Przełącz w tryb DATA
+    ESP_LOGI(TAG, "Switching to DATA mode...");
+    esp_err_t err = esp_modem_set_mode(dce, ESP_MODEM_MODE_DATA);
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to set DATA mode");
+        return err;
+    }
+
+    return ESP_OK;
 }
 
 bool lte_manager_is_connected(void)

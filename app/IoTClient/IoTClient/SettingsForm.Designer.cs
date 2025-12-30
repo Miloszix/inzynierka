@@ -14,6 +14,7 @@
         private DataGridView dataGateways;
         private Button btnAddGateway;
         private Button btnDeleteGateway;
+        private Button btnRenameGateway;
 
         private Button btnAcceptSensor;
         private Button btnIgnoreSensor;
@@ -144,6 +145,16 @@
             btnDeleteGateway.TabIndex = 3;
             btnDeleteGateway.Text = "Delete";
             btnDeleteGateway.Click += btnDeleteGateway_Click;
+            //
+            // btnRenameGateway
+            //
+            btnRenameGateway = new Button();
+            btnRenameGateway.Text = "Rename";
+            btnRenameGateway.Size = new Size(100, 40);
+            btnRenameGateway.Location = new Point(230, 450);
+            btnRenameGateway.Click += btnRenameGateway_Click;
+            panelGateways.Controls.Add(btnRenameGateway);
+            StyleButton(btnRenameGateway);
             // 
             // btnAcceptSensor
             // 

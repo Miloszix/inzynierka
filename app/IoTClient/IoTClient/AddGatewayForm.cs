@@ -8,6 +8,8 @@ namespace IoTClient
 {
     public partial class AddGatewayForm : Form
     {
+        public GatewayItem? AddedGateway { get; private set; }
+
         public AddGatewayForm()
         {
             InitializeComponent();
@@ -42,8 +44,14 @@ namespace IoTClient
 
                 if (res.IsSuccessStatusCode)
                 {
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
+                    AddedGateway = new GatewayItem
+                    {
+                        gateway_id = id,
+                        name = name
+                    };
+
+                    DialogResult = DialogResult.OK;
+                    Close();
                 }
                 else
                 {

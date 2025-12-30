@@ -211,6 +211,7 @@ void mqtt_init(void)
 
     esp_mqtt_client_start(mqtt_client);
 
+    mqtt_notify_gateway_online();
     mqtt_started = true;
 
     ESP_LOGI(TAG, "MQTT client started");

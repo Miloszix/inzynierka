@@ -1,4 +1,3 @@
-#include "wifi_manager.h"
 #include "sensor_manager.h"
 #include "mqtt_message.h"
 #include "ble_scanner.h"
@@ -15,10 +14,12 @@ void app_main()
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
-    sensor_manager_init(); // 1. tablica sensorów
-    for (int i = 0; i < 3; i++)
+    sensor_manager_init();
+    int i = 0;
+    while (1)
     {
-        ESP_LOGI("APP_MAIN", "Starting in %d...", 3 - i);
+
+        ESP_LOGI("APP_MAIN", "Starting");
         if (lte_manager_init() == ESP_OK)
         {
             ESP_LOGI("APP_MAIN", "LTE initialized successfully");
@@ -26,9 +27,10 @@ void app_main()
         }
         else
         {
-            ESP_LOGW("APP_MAIN", "LTE init failed, retrying... (%d/3)", i + 1);
+            ESP_LOGW("APP_MAIN", "LTE init failed, retrying... (%d)", i + 1);
         }
+        i++;
     }
-    mqtt_init(); // 3. MQTT (czeka na LTE)
-    ble_init();  // 4. BLE scanner
+    mqtt_init();
+    ble_init();
 }

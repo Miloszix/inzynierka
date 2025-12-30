@@ -12,6 +12,8 @@ namespace IoTClient
 
         private bool suppressSelectionChanged = false;
 
+        private TimeZoneInfo localTimeZone;
+
         private DateTime lastTimestamp = DateTime.MinValue;
         private List<Measurement> chartHistory = new();
 
@@ -35,6 +37,10 @@ namespace IoTClient
         {
             InitializeComponent();
 
+            this.FormClosed += MainForm_FormClosed;
+
+            localTimeZone = TimeZoneInfo.Local;
+
             tabControlCharts.DrawMode = TabDrawMode.OwnerDrawFixed;
             tabControlCharts.Appearance = TabAppearance.Normal;
             tabControlCharts.SizeMode = TabSizeMode.Fixed;
@@ -42,27 +48,11 @@ namespace IoTClient
             tabControlCharts.GetType().GetProperty("UserPaint", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.SetValue(tabControlCharts, true);
 
             ApplyDarkTheme();
-
-
-            //foreach (TabPage tp in tabControlCharts.TabPages)
-            //{
-            //    tp.BackColor = System.Drawing.Color.FromArgb(45, 45, 45);  // ciemne tło
-            //}
             StyleGrid(dataGridSensors);
             StyleGrid(dataGridPending);
 
             panelTop.Resize += (s, e) => PositionLastUpdateLabel();
             PositionLastUpdateLabel();
-
-            // === Fix ScottPlot sizing ===
-            //formsPlotTemp.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            //formsPlotHum.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            //formsPlotPress.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-
-            //// === Remove TabPage BackColor override to preserve ScottPlot dark style ===
-            //tabTemp.UseVisualStyleBackColor = true;
-            //tabHum.UseVisualStyleBackColor = true;
-            //tabPress.UseVisualStyleBackColor = true;
 
             comboGateway.SelectedIndexChanged += comboGateway_SelectedIndexChanged;
 
@@ -74,9 +64,24 @@ namespace IoTClient
             autoRefreshTimer.Start();
         }
 
-        // =====================================================================
-        // HTTP AUTH CLIENT
-        // =====================================================================
+        private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private DateTime UtcToLocal(string utcTimestamp)
+        {
+            if (!DateTime.TryParse(
+                utcTimestamp,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                out var utc))
+            {
+                return DateTime.MinValue;
+            }
+
+            return TimeZoneInfo.ConvertTimeFromUtc(utc, localTimeZone);
+        }
         private HttpClient CreateClient()
         {
             var client = new HttpClient();
@@ -85,16 +90,13 @@ namespace IoTClient
             return client;
         }
 
-        // =====================================================================
-        // LOAD USER GATEWAYS
-        // =====================================================================
         private async Task LoadGateways()
         {
             try
             {
                 using var client = CreateClient();
 
-                var gateways = Session.Gateways; // bo login już je pobrał
+                var gateways = Session.Gateways;
 
                 comboGateway.Items.Clear();
                 comboGateway.DisplayMember = "name";
@@ -109,7 +111,7 @@ namespace IoTClient
 
                     Session.GatewayId = gateways[0].gateway_id;
 
-                    LoadSensors();   // ← to było brakujące
+                    LoadSensors();
                 }
             }
             catch (Exception ex)
@@ -118,9 +120,6 @@ namespace IoTClient
             }
         }
 
-        // =====================================================================
-        // GATEWAY CHANGED
-        // =====================================================================
         private void comboGateway_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (comboGateway.SelectedItem is GatewayItem gw)
@@ -131,15 +130,11 @@ namespace IoTClient
             }
         }
 
-
-        // =====================================================================
-        // LOAD SENSORS FOR CURRENT GATEWAY
-        // =====================================================================
         private async void LoadSensors()
         {
             try
             {
-                suppressSelectionChanged = true; // ← BLOKADA EVENTÓW
+                suppressSelectionChanged = true;
 
                 if (string.IsNullOrWhiteSpace(Session.GatewayId))
                 {
@@ -188,8 +183,9 @@ namespace IoTClient
                         humidity = latest?.humidity ?? 0,
                         pressure = latest?.pressure ?? 0,
                         timestamp = latest?.timestamp != null
-                            ? DateTime.Parse(latest.timestamp).ToString("yyyy-MM-dd HH:mm:ss")
+                            ? UtcToLocal(latest.timestamp).ToString("yyyy-MM-dd HH:mm:ss")
                             : "-"
+
                     });
                 }
 
@@ -199,7 +195,6 @@ namespace IoTClient
                 foreach (DataGridViewColumn col in dataGridSensors.Columns)
                     col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
 
-                // Przywracamy zaznaczenie
                 if (!string.IsNullOrWhiteSpace(selectedMac))
                 {
                     foreach (DataGridViewRow row in dataGridSensors.Rows)
@@ -213,7 +208,7 @@ namespace IoTClient
                     }
                 }
 
-                suppressSelectionChanged = false; // ← ODBLOKOWANIE EVENTÓW
+                suppressSelectionChanged = false;
             }
             catch (Exception ex)
             {
@@ -222,11 +217,6 @@ namespace IoTClient
             }
         }
 
-
-
-        // =====================================================================
-        // ACCEPT SENSOR
-        // =====================================================================
         private async void BtnAccept_Click(object sender, EventArgs e)
         {
             if (dataGridPending.SelectedRows.Count == 0)
@@ -266,9 +256,6 @@ namespace IoTClient
             }
         }
 
-        // =====================================================================
-        // IGNORE SENSOR
-        // =====================================================================
         private async void BtnIgnore_Click(object sender, EventArgs e)
         {
             if (dataGridPending.SelectedRows.Count == 0)
@@ -306,16 +293,49 @@ namespace IoTClient
         private void BtnSettings_Click(object sender, EventArgs e)
         {
             var sf = new SettingsForm();
-            sf.ShowDialog();
+            if (sf.ShowDialog() != DialogResult.OK)
+                return;
 
-            // po powrocie z ustawień trzeba odświeżyć gatewaye i sensory
-            _ = LoadGateways();
+            if (!sf.GatewaysChanged)
+                return;
+
+            Session.Gateways.Clear();
+            foreach (var g in sf.UpdatedGateways)
+            {
+                Session.Gateways.Add(new GatewayItem
+                {
+                    gateway_id = g.gateway_id,
+                    name = g.name
+                });
+            }
+
+            ReloadGatewayCombo(sf.LastAddedGatewayId);
         }
 
+        private void ReloadGatewayCombo(string? selectGatewayId = null)
+        {
+            comboGateway.Items.Clear();
 
-        // =====================================================================
-        // SENSOR SELECTED → DRAW CHARTS
-        // =====================================================================
+            foreach (var g in Session.Gateways)
+                comboGateway.Items.Add(g);
+
+            if (Session.Gateways.Count == 0)
+                return;
+
+            int index = 0;
+
+            if (!string.IsNullOrWhiteSpace(selectGatewayId))
+            {
+                index = Session.Gateways.FindIndex(g => g.gateway_id == selectGatewayId);
+                if (index < 0)
+                    index = 0;
+            }
+
+            comboGateway.SelectedIndex = index;
+            Session.GatewayId = Session.Gateways[index].gateway_id;
+            LoadSensors();
+        }
+
         private void dataGridSensors_SelectionChanged(object sender, EventArgs e)
         {
             if (suppressSelectionChanged)
@@ -328,17 +348,12 @@ namespace IoTClient
                 DrawCharts(row.sensor_mac);
         }
 
-
-        // =====================================================================
-        // DRAW CHARTS
-        // =====================================================================
         private async void DrawCharts(string mac)
         {
             try
             {
                 using var client = CreateClient();
 
-                // POBIERAMY CAŁĄ HISTORIĘ TYLKO RAZ – przy wybraniu sensora
                 var m = await client.GetFromJsonAsync<List<Measurement>>(
                     $"http://3.70.126.6:1880/measurements?sensor_mac={Uri.EscapeDataString(mac)}&gateway_id={Session.GatewayId}");
 
@@ -351,42 +366,51 @@ namespace IoTClient
                 }
 
                 chartHistory = m
-                    .Where(x => DateTime.TryParse(x.timestamp, out _))
-                    .OrderBy(x => DateTime.Parse(x.timestamp))
+                    .Where(x => !string.IsNullOrWhiteSpace(x.timestamp))
+                    .OrderBy(x => DateTime.Parse(
+                        x.timestamp,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.AssumeUniversal))
                     .ToList();
 
-                // ostatni timestamp
                 lastTimestamp = DateTime.Parse(chartHistory.Last().timestamp);
 
-                // konwersja do tablic na wykres
-                DateTime[] dts = chartHistory.Select(x => DateTime.Parse(x.timestamp)).ToArray();
+                DateTime[] dts = chartHistory
+                    .Select(x => UtcToLocal(x.timestamp))
+                    .ToArray();
                 double[] temps = chartHistory.Select(x => x.temperature).ToArray();
                 double[] hums = chartHistory.Select(x => x.humidity).ToArray();
                 double[] press = chartHistory.Select(x => x.pressure).ToArray();
 
-                // --- Temperature ---
+
+                DateTime end = dts.Last();
+                DateTime start = end.AddHours(-24);
+                double xMin = start.ToOADate();
+                double xMax = end.ToOADate();
+
                 var tplt = formsPlotTemp.Plot;
                 tplt.Clear();
                 tplt.Add.Scatter(dts, temps).LegendText = "Temperature (°C)";
                 tplt.Legend.IsVisible = true;
-                tplt.Axes.AutoScale();
+                tplt.Axes.AutoScaleY();              // Y auto
                 tplt.Axes.DateTimeTicksBottom();
+                tplt.Axes.SetLimitsX(xMin, xMax);
 
-                // --- Humidity ---
                 var hplt = formsPlotHum.Plot;
                 hplt.Clear();
                 hplt.Add.Scatter(dts, hums).LegendText = "Humidity (%)";
                 hplt.Legend.IsVisible = true;
-                hplt.Axes.AutoScale();
+                hplt.Axes.AutoScaleY();
                 hplt.Axes.DateTimeTicksBottom();
+                hplt.Axes.SetLimitsX(xMin, xMax);
 
-                // --- Pressure ---
                 var pplt = formsPlotPress.Plot;
                 pplt.Clear();
                 pplt.Add.Scatter(dts, press).LegendText = "Pressure (hPa)";
                 pplt.Legend.IsVisible = true;
-                pplt.Axes.AutoScale();
+                pplt.Axes.AutoScaleY();
                 pplt.Axes.DateTimeTicksBottom();
+                pplt.Axes.SetLimitsX(xMin, xMax);
 
                 ApplyDarkStyle(tplt);
                 ApplyDarkStyle(hplt);
@@ -414,7 +438,6 @@ namespace IoTClient
                 return;
             refreshCounter++;
 
-            // co 3 ticki (15s) pełny reload (pending + accepted)
             if (refreshCounter % 3 == 0)
             {
                 LoadSensors();
@@ -431,7 +454,6 @@ namespace IoTClient
 
             using var client = CreateClient();
 
-            // przygotowanie: mapując sensory aby wykres pobrał tylko raz
             SensorLatest? selected =
                 dataGridSensors.SelectedRows.Count > 0
                 ? dataGridSensors.SelectedRows[0].DataBoundItem as SensorLatest
@@ -442,20 +464,24 @@ namespace IoTClient
             foreach (var sensor in sensors)
             {
                 if (string.IsNullOrWhiteSpace(sensor.sensor_mac)) continue;
-                if (string.IsNullOrWhiteSpace(sensor.timestamp) || sensor.timestamp == "-") continue;
+                string lastTs =
+                    chartHistory.Count > 0
+                    ? chartHistory.Last().timestamp   // UTC z measurements
+                    : null;
 
-                string lastTs = sensor.timestamp;
+                if (lastTs == null)
+                    continue;
                 string mac = sensor.sensor_mac;
 
                 string url =
                     $"http://3.70.126.6:1880/measurements_since?sensor_mac={Uri.EscapeDataString(mac)}" +
                     $"&gateway_id={Session.GatewayId}&after={Uri.EscapeDataString(lastTs)}";
 
+
                 var res = await client.GetFromJsonAsync<List<Measurement>>(url) ?? new List<Measurement>();
 
                 newDataForSensor[mac] = res;
 
-                // update tabeli (tylko latest)
                 if (res.Count > 0)
                 {
                     var newest = res
@@ -466,19 +492,18 @@ namespace IoTClient
                     sensor.temperature = newest.temperature;
                     sensor.humidity = newest.humidity;
                     sensor.pressure = newest.pressure;
-                    sensor.timestamp = DateTime.Parse(newest.timestamp).ToString("yyyy-MM-dd HH:mm:ss");
+                    sensor.timestamp = UtcToLocal(newest.timestamp).ToString("yyyy-MM-dd HH:mm:ss");
                 }
             }
 
             dataGridSensors.Refresh();
 
-            // aktualizacja wykresu — ale używa danych, które JUŻ pobraliśmy
             if (selected != null)
             {
                 string mac = selected.sensor_mac!;
                 if (newDataForSensor.TryGetValue(mac, out var newMeas) && newMeas != null && newMeas.Count > 0)
                 {
-                    UpdateChartFromCache(newMeas); // nowa funkcja, patrz niżej
+                    UpdateChartFromCache(newMeas);
                 }
             }
         }
@@ -486,7 +511,6 @@ namespace IoTClient
 
         private void UpdateChartFromCache(List<Measurement> newData)
         {
-            // doklej nowe dane do lokalnej historii wykresu
             foreach (var m in newData)
                 chartHistory.Add(m);
 
@@ -497,13 +521,14 @@ namespace IoTClient
 
             lastTimestamp = DateTime.Parse(chartHistory.Last().timestamp);
 
-            // konwersja do tablic
-            DateTime[] dts = chartHistory.Select(x => DateTime.Parse(x.timestamp)).ToArray();
+            DateTime[] dts = chartHistory
+                .Select(x => UtcToLocal(x.timestamp))
+                .ToArray();
+
             double[] temps = chartHistory.Select(x => x.temperature).ToArray();
             double[] hums = chartHistory.Select(x => x.humidity).ToArray();
             double[] press = chartHistory.Select(x => x.pressure).ToArray();
 
-            // aktualizacja wykresów
             var tplt = formsPlotTemp.Plot;
             tplt.Clear();
             tplt.Add.Scatter(dts, temps).LegendText = "Temperature (°C)";
