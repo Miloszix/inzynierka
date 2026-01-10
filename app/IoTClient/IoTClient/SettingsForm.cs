@@ -153,7 +153,7 @@ namespace IoTClient
                 return;
             }
 
-            // otwieramy okno RenameForm
+            // open rename form
             var f = new RenameForm(sensor.sensor_mac!, sensor.name ?? "");
 
             if (f.ShowDialog() != DialogResult.OK)
@@ -179,7 +179,7 @@ namespace IoTClient
 
                 if (res.IsSuccessStatusCode)
                 {
-                    // przeładuj sensory wybranego gatewaya
+                    // reload sensors
                     if (dataGateways.SelectedRows.Count > 0 &&
                         dataGateways.SelectedRows[0].DataBoundItem is UserGateway gw)
                     {

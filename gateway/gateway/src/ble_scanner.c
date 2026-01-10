@@ -18,7 +18,7 @@
 #define TAG "BLE_SCANNER"
 
 static struct ble_npl_callout scan_reset_timer;
-#define SCAN_RESET_MS 60000 // Reset co 60 sekund
+#define SCAN_RESET_MS 60000
 
 #ifndef BLE_ADDR_STR_LEN
 #define BLE_ADDR_STR_LEN 18
@@ -40,10 +40,8 @@ static void format_ble_addr(const ble_addr_t *addr, char *str);
 void ble_host_task(void *param);
 static void scan_reset_timer_cb(struct ble_npl_event *ev);
 
-// --- Global ---
 static uint8_t own_addr_type;
 
-// --- PUBLIC API ---
 void ble_init(void)
 {
     int rc;
@@ -69,10 +67,8 @@ static void scan_reset_timer_cb(struct ble_npl_event *ev)
 {
     ESP_LOGI(TAG, "Resetting scan to clear duplicate filter...");
 
-    // Zatrzymaj obecne skanowanie
     ble_gap_disc_cancel();
 
-    // Uruchom skanowanie ponownie
     start_scan();
 }
 
@@ -82,7 +78,6 @@ void ble_host_task(void *param)
     nimble_port_freertos_deinit();
 }
 
-// --- Callbacks ---
 static void ble_app_on_reset(int reason)
 {
     ESP_LOGE(TAG, "BLE Host reset; reason=%d", reason);
@@ -101,7 +96,6 @@ static void ble_app_on_sync(void)
     start_scan();
 }
 
-// --- Scanning ---
 static void start_scan(void)
 {
     struct ble_gap_disc_params params = {
@@ -110,8 +104,7 @@ static void start_scan(void)
         .filter_policy = 0,
         .limited = 0,
         .passive = 1,
-        .filter_duplicates = 1 // odbierasz jeden pakiet
-    };
+        .filter_duplicates = 1};
 
     ESP_LOGI(TAG, "Starting BLE scan");
 
@@ -120,7 +113,6 @@ static void start_scan(void)
 
     if (rc == 0)
     {
-        // Resetuj timer na 60 sekund
         ble_npl_callout_reset(&scan_reset_timer,
                               ble_npl_time_ms_to_ticks32(SCAN_RESET_MS));
     }
@@ -130,7 +122,6 @@ static void start_scan(void)
     }
 }
 
-// --- Event Handler ---
 static int ble_gap_event(struct ble_gap_event *event, void *arg)
 {
     switch (event->type)
@@ -182,7 +173,6 @@ static int ble_gap_event(struct ble_gap_event *event, void *arg)
     return 0;
 }
 
-// --- Address formatting ---
 static void format_ble_addr(const ble_addr_t *addr, char *str)
 {
     sprintf(str, "%02X:%02X:%02X:%02X:%02X:%02X",

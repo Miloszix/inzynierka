@@ -14,7 +14,6 @@ static esp_mqtt_client_handle_t mqtt_client = NULL;
 static bool mqtt_connected = false;
 static bool mqtt_started = false;
 
-/* EVENT HANDLER (inner) */
 static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
 {
     if (!event)
@@ -53,7 +52,6 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
         char payload[256] = {0};
         strncpy(payload, event->data, event->data_len);
 
-        // server/GW001/sensor/<MAC>/status
         char status_prefix[64];
         snprintf(status_prefix, sizeof(status_prefix),
                  "server/%s/sensor/", GATEWAY_ID);
@@ -61,9 +59,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
         if (strncmp(topic, status_prefix, strlen(status_prefix)) == 0 &&
             strstr(topic, "/status"))
         {
-            // Wyciągamy MAC z topicu
-            // topic = server/GW001/sensor/AA:BB:CC:DD:EE:FF/status
-
+            // pull MAC from topic
             char mac[18] = {0};
             const char *p = topic + strlen(status_prefix);
             const char *slash = strstr(p, "/status");
@@ -91,7 +87,6 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
             return ESP_OK;
         }
 
-        // Odbiór: server/GW001/sync_response
         char sync_topic[64];
         snprintf(sync_topic, sizeof(sync_topic),
                  "server/%s/sync_response", GATEWAY_ID);
@@ -117,7 +112,6 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
                     bool approved = strcmp(status, "accepted") == 0;
 
                     sensor_set_approved(mac, approved);
-                    // sensor_set_reported(mac, true);
 
                     ESP_LOGI(TAG, "Sensor %s -> %s", mac, approved ? "ACCEPTED" : "IGNORED");
                 }
@@ -143,7 +137,6 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
     return ESP_OK;
 }
 
-/* EVENT WRAPPER */
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
                                int32_t event_id, void *event_data)
 {
@@ -168,7 +161,6 @@ void mqtt_notify_gateway_online()
     ESP_LOGI(TAG, "Gateway online message sent: %s -> %s", topic, payload);
 }
 
-/* INIT MQTT */
 void mqtt_init(void)
 {
     if (mqtt_started)
@@ -196,10 +188,9 @@ void mqtt_init(void)
         .session.disable_clean_session = false,
         .credentials.client_id = GATEWAY_ID,
         .session.keepalive = 10,
-        .network.timeout_ms = 10000, // Zwiększ do 60s
+        .network.timeout_ms = 10000,
         .network.reconnect_timeout_ms = 1000,
-        .buffer.size = 1024, // Upewnij się, że bufor jest wystarczający
-
+        .buffer.size = 1024,
     };
 
     mqtt_client = esp_mqtt_client_init(&cfg);

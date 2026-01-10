@@ -4,7 +4,6 @@
 
 /* ESP APIs */
 #include "esp_log.h"
-#include "nvs_flash.h"
 #include "sdkconfig.h"
 #include "esp_err.h"
 #include "driver/i2c.h"
@@ -49,14 +48,10 @@ void init_uart()
     uart_param_config(UART_NUM_0, &uart_config);
 }
 
-/* =====================
-   JEDEN TASK – SENSOR + BLE
-   ===================== */
-
 void sensor_ble_task(void *pvParameters)
 {
-    const int active_ms = 5000; // reklama 5 sekund
-    const int cycle_ms = 60000; // pełny cykl 60 sekund
+    const int active_ms = 5000; // advert time
+    const int cycle_ms = 60000; // full cycle time
 
     // Poczekaj, aż NimBLE się zsynchronizuje
     while (!ble_synced)
@@ -67,33 +62,33 @@ void sensor_ble_task(void *pvParameters)
 
     while (1)
     {
-        // 1. Odczyt
+        // 1. Read
         bme280_read_data(&temperature, &humidity, &pressure);
         ESP_LOGI("BME280", "Temp: %.2f C, Hum: %.2f %%, Pres: %.2f hPa",
                  temperature, humidity, pressure);
 
-        // 2. Aktualizacja danych
+        // Update data
         ble_update_measurements(temperature, humidity, pressure);
 
-        // 3. START advertising na określony czas — stack sam stopuje
+        // START advertising for a specified time — stack stops it automatically
         start_advertising(active_ms);
         ESP_LOGI("BLE", "Advertising scheduled for %d ms", active_ms);
 
-        // 4. Poczekaj active_ms + mały margin (reklama będzie zatrzymana przez stack i event ADV_COMPLETE)
+        // Wait for active_ms + small margin (advertising will be stopped by the stack and ADV_COMPLETE event)
         vTaskDelay(pdMS_TO_TICKS(active_ms + 50));
 
-        // 5. Uśpij na resztę cyklu
+        // Sleep for the rest of the cycle
         int sleep_time = cycle_ms - active_ms;
-        // 5. Sleep
+        // Sleep
         ESP_LOGI("BLE", "Sleeping for %d ms", sleep_time);
 
-        // ustaw wybudzanie zegarowe:
+        // set timer wakeup:
         esp_sleep_enable_timer_wakeup((uint64_t)sleep_time * 1000);
 
-        // wejdź w light sleep
+        // enter light sleep
         esp_light_sleep_start();
 
-        // po wybudzeniu kod wraca TUTAJ
+        // after waking up, code returns HERE
         ESP_LOGI("BLE", "Woke up!");
     }
 }

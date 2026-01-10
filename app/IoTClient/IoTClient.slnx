@@ -1,3 +1,5 @@
 <Solution>
-  <Project Path="IoTClient/IoTClient.csproj" />
+  <Project Path="IoTClient/IoTClient.csproj">
+    <BuildType Project="Release" />
+  </Project>
 </Solution>

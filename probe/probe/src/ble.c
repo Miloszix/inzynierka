@@ -25,9 +25,7 @@
 #define BLE_GAP_APPEARANCE_GENERIC_TAG 0x0200
 #define MANUFACTURER_ID 0x1234
 
-// static const char *TAG = "BLE_SENSOR";
-
-// --- Dane z czujnika ---
+// sensor data
 static float g_temp = 0.0f;
 static float g_hum = 0.0f;
 static float g_press = 0.0f;
@@ -45,18 +43,12 @@ static uint8_t addr_val[6] = {0};
 
 volatile bool ble_synced = false;
 
-/* -----------------------------
-   Formatowanie MAC adresu
------------------------------- */
 inline static void format_addr(char *addr_str, uint8_t addr[])
 {
     sprintf(addr_str, "%02X:%02X:%02X:%02X:%02X:%02X",
             addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
 }
 
-/* -----------------------------
-   Kodowanie danych sensora
------------------------------- */
 static void fill_sensor_data(uint8_t *buf)
 {
     int16_t temp = (int16_t)(g_temp * 100);
@@ -71,9 +63,6 @@ static void fill_sensor_data(uint8_t *buf)
     buf[5] = (pres >> 8) & 0xFF;
 }
 
-/* -----------------------------
-   START BLE ADVERTISING
------------------------------- */
 static int ble_gap_event_handler(struct ble_gap_event *event, void *arg)
 {
     switch (event->type)
@@ -123,15 +112,9 @@ void start_advertising(uint32_t duration_ms)
         return;
     }
 
-    rsp_fields.device_addr = addr_val;
-    rsp_fields.device_addr_type = own_addr_type;
-    rsp_fields.device_addr_is_present = 1;
-    ble_gap_adv_rsp_set_fields(&rsp_fields);
-
     adv_params.conn_mode = BLE_GAP_CONN_MODE_NON;
     adv_params.disc_mode = BLE_GAP_DISC_MODE_GEN;
 
-    /* duration_ms == 0 oznacza BLE_HS_FOREVER (stare zachowanie) */
     uint32_t dur = (duration_ms == 0) ? BLE_HS_FOREVER : duration_ms;
 
     rc = ble_gap_adv_start(own_addr_type, NULL, dur, &adv_params,
@@ -146,10 +129,6 @@ void start_advertising(uint32_t duration_ms)
              (unsigned)dur, g_temp, g_hum, g_press);
 }
 
-/* -----------------------------
-   Callbacki stosu BLE
------------------------------- */
-
 static void on_stack_reset(int reason)
 {
     ESP_LOGW(TAG, "NimBLE stack reset: %d", reason);
@@ -161,10 +140,6 @@ static void on_stack_sync(void)
     ble_synced = true;
 }
 
-/* -----------------------------
-   Ustawienie konfiguracji NimBLE
------------------------------- */
-
 static void nimble_host_config_init(void)
 {
     ble_hs_cfg.reset_cb = on_stack_reset;
@@ -174,20 +149,12 @@ static void nimble_host_config_init(void)
     ble_store_config_init();
 }
 
-/* -----------------------------
-   Task hosta BLE
------------------------------- */
-
 static void nimble_host_task(void *param)
 {
     ESP_LOGI(TAG, "NimBLE host task started");
     nimble_port_run();
     vTaskDelete(NULL);
 }
-
-/* -----------------------------
-   BLE INIT
------------------------------- */
 
 void ble_init(void)
 {
@@ -212,10 +179,6 @@ void ble_init(void)
 
     xTaskCreate(nimble_host_task, "NimBLE Host", 4096, NULL, 5, NULL);
 }
-
-/* -----------------------------
-   Aktualizacja pomiarów BLE
------------------------------- */
 
 void ble_update_measurements(float temperature, float humidity, float pressure)
 {

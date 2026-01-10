@@ -41,10 +41,9 @@ namespace IoTClient
                 return;
             }
 
-            // 🔥 Pobierz gatewaye użytkownika
             await LoadUserGateways();
 
-            // Nawet jeśli użytkownik nie ma gatewayów → MainForm i tak się otworzy
+            // even if no gateways, proceed to main form
             MainForm main = new MainForm();
             main.Show();
             this.Hide();

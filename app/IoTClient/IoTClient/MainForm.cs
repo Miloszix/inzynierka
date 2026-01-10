@@ -59,7 +59,7 @@ namespace IoTClient
             _ = LoadGateways(); // async start
 
             autoRefreshTimer = new System.Windows.Forms.Timer();
-            autoRefreshTimer.Interval = 5000; // 5000 ms = 5 sekund
+            autoRefreshTimer.Interval = 5000;
             autoRefreshTimer.Tick += AutoRefreshTimer_Tick;
             autoRefreshTimer.Start();
         }
@@ -126,7 +126,7 @@ namespace IoTClient
             {
                 Session.GatewayId = gw.gateway_id;
 
-                LoadSensors();  // ← pobierz sensory dla tego gatewaya
+                LoadSensors();  // load sensors for selected gateway
             }
         }
 
@@ -466,7 +466,7 @@ namespace IoTClient
                 if (string.IsNullOrWhiteSpace(sensor.sensor_mac)) continue;
                 string lastTs =
                     chartHistory.Count > 0
-                    ? chartHistory.Last().timestamp   // UTC z measurements
+                    ? chartHistory.Last().timestamp   // UTC from measurements
                     : null;
 
                 if (lastTs == null)
@@ -798,8 +798,6 @@ namespace IoTClient
                     .Where(m => DateTime.TryParse(m.timestamp, out _))
                     .OrderByDescending(m => DateTime.Parse(m.timestamp))
                     .ToList();
-
-                // Otwórz okno z tabelą pomiarów
                 var f = new MeasurementsForm(sorted, sensor.name ?? sensor.sensor_mac);
                 f.ShowDialog();
             }

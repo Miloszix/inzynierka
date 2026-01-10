@@ -62,7 +62,7 @@ void sensor_set_approved(const char *mac, bool approved)
         }
     }
 
-    // ❗ SENSOR NIE ISTNIAŁ → DODAJEMY GO
+    // SENSOR didn't exist, add it
     if (sensor_count < 32)
     {
         strcpy(sensors[sensor_count].mac, mac);

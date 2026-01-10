@@ -76,7 +76,6 @@ esp_err_t lte_manager_init(void)
         ppp_netif = esp_netif_new(&cfg);
     }
 
-    // 3. Konfiguracja UART/DTE
     esp_modem_dte_config_t dte_cfg = ESP_MODEM_DTE_DEFAULT_CONFIG();
     dte_cfg.uart_config.port_num = MODEM_UART;
     dte_cfg.uart_config.tx_io_num = MODEM_TX;
@@ -91,7 +90,7 @@ esp_err_t lte_manager_init(void)
     {
         ESP_LOGW(TAG, "Modem not responding, pulsing PWRKEY...");
         modem_hardware_reset();
-        // Po hard-resecie trzeba poczekać chwilę na bootloader modemu
+        // after reset, there might be some delay until modem is ready
         vTaskDelay(pdMS_TO_TICKS(3000));
     }
 
@@ -100,7 +99,7 @@ esp_err_t lte_manager_init(void)
     esp_modem_at(dce, "AT+CFUN=1", NULL, 1000);
 
     esp_modem_at(dce, "AT+CNMP=38", NULL, 1000); // LTE Only
-    esp_modem_at(dce, "AT+CMNB=1", NULL, 1000);  // LTE-M (lub 3 dla obu)
+    esp_modem_at(dce, "AT+CMNB=1", NULL, 1000);  // LTE-M
 
     char pdp_cmd[64];
     snprintf(pdp_cmd, sizeof(pdp_cmd), "AT+CGDCONT=1,\"IP\",\"%s\"", MODEM_APN);
@@ -127,7 +126,7 @@ esp_err_t lte_manager_init(void)
         return ESP_FAIL;
     }
 
-    // 6. Przełącz w tryb DATA
+    // switch to DATA mode (PPP)
     ESP_LOGI(TAG, "Switching to DATA mode...");
     esp_err_t err = esp_modem_set_mode(dce, ESP_MODEM_MODE_DATA);
     if (err != ESP_OK)
